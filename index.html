@@ -274,34 +274,6 @@
       font-family: var(--sans); font-size: 13px; transition: all 0.15s;
     }
     .set-save:hover { background: rgba(29,158,117,0.25); }
-
-    /* ── Door Status ── */
-    .door-panel {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-    }
-    .door-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px 16px; position: relative;
-      overflow: hidden;
-    }
-    .door-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: transparent; transition: background 0.4s;
-    }
-    .door-card.open { border-color: var(--coral); }
-    .door-card.open::before { background: var(--coral); }
-    .door-card.closed { border-color: var(--teal); }
-    .door-card.closed::before { background: var(--teal); }
-
-    .door-name { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
-    .door-state {
-      font-family: var(--mono); font-size: 12px; padding: 4px 8px;
-      border-radius: 6px; display: inline-block; white-space: nowrap;
-    }
-    .door-state.open { background: var(--coral-dim); color: var(--coral-l); }
-    .door-state.closed { background: var(--teal-dim); color: var(--teal-l); }
-    .door-time { font-size: 10px; color: var(--muted); margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -332,9 +304,9 @@
       <div class="metric-value" id="m-today">–</div>
     </div>
     <div class="metric">
-      <div class="metric-label">Aktive Sensoren</div>
-      <div class="metric-value" id="m-active">–</div>
-      <div class="metric-sub" id="m-active-sub"></div>
+      <div class="metric-label">Garage</div>
+      <div class="metric-value sm" id="m-garage">–</div>
+      <div class="metric-sub" id="m-garage-sub"></div>
     </div>
     <div class="metric">
       <div class="metric-label">Aktivster Bereich</div>
@@ -349,37 +321,26 @@
 
   <div class="sensors-grid" id="sensors-grid"></div>
 
-  <div class="panels full" style="margin-bottom:18px;">
+  <div class="panel" style="margin-bottom:18px;">
+    <div class="panel-header">
+      <span class="panel-title">Aktivitäts-Heatmap</span>
+      <div class="panel-tabs">
+        <button class="tab-btn active" onclick="setHeatRange(this,1)">Heute</button>
+        <button class="tab-btn" onclick="setHeatRange(this,7)">7 Tage</button>
+      </div>
+    </div>
+    <div class="heatmap-body">
+      <div class="hm-grid" id="heatmap"></div>
+    </div>
+  </div>
+
+  <div class="panels full">
     <div class="panel">
       <div class="panel-header">
         <span class="panel-title">Garage (Log)</span>
         <span id="door-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
       </div>
       <div class="events-list" id="door-events-list"></div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">Garage (aktuell)</span>
-      </div>
-      <div style="padding:16px 18px; flex:1; overflow-y:auto;">
-        <div id="doors-status-detail"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="panels">
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">Aktivitäts-Heatmap</span>
-        <div class="panel-tabs">
-          <button class="tab-btn active" onclick="setHeatRange(this,1)">Heute</button>
-          <button class="tab-btn" onclick="setHeatRange(this,7)">7 Tage</button>
-        </div>
-      </div>
-      <div class="heatmap-body">
-        <div class="hm-grid" id="heatmap"></div>
-      </div>
     </div>
 
     <div class="panel">
@@ -546,13 +507,6 @@ function updateMetrics() {
   const todayEvts  = events.filter(e => new Date(e.created_at) >= todayStart);
 
   document.getElementById('m-today').textContent = todayEvts.length;
-
-  // Aktivste Sensoren in letzten 10 min
-  const active = Object.keys(SENSORS).filter(id => lastState[parseInt(id)] === true);
-  document.getElementById('m-active').textContent = `${active.length} / ${Object.keys(SENSORS).length}`;
-  document.getElementById('m-active-sub').textContent = active.length
-    ? active.map(id => SENSORS[id].name).join(', ')
-    : 'alle ruhig';
 
   // Aktivster Bereich heute
   const counts = {};
@@ -788,26 +742,23 @@ function handleDoorInsert(payload) {
 }
 
 function renderDoorPanel() {
-  const detailPanel = document.getElementById('doors-status-detail');
-  if (!detailPanel) return;
+  const val = document.getElementById('m-garage');
+  const sub = document.getElementById('m-garage-sub');
+  if (!val) return;
 
-  if (Object.keys(doorStatus).length === 0) {
-    detailPanel.innerHTML = '';
+  const g = doorStatus['Garage'];
+  if (!g) {
+    val.textContent = '–';
+    val.style.color = '';
+    sub.textContent = '';
     return;
   }
 
-  detailPanel.innerHTML = Object.entries(doorStatus).map(([name, data]) => {
-    const time = new Date(data.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
-    const d = new Date(data.created_at).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' });
-    return `
-      <div style="padding:10px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
-        <div>
-          <div style="font-size:13px; font-weight:500">${name}</div>
-          <div style="font-size:11px; color:var(--muted); margin-top:2px">${d} ${time}</div>
-        </div>
-        <span class="door-state ${data.state}" style="font-size:11px">${data.state === 'open' ? 'open' : 'closed'}</span>
-      </div>`;
-  }).join('');
+  val.textContent = g.state === 'open' ? 'open' : 'closed';
+  val.style.color = g.state === 'open' ? 'var(--coral-l)' : 'var(--teal-l)';
+  const time = new Date(g.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
+  const d = new Date(g.created_at).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' });
+  sub.textContent = `${d} ${time}`;
 }
 
 function renderDoorEventsList() {
