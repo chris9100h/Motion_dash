@@ -453,7 +453,7 @@ function buildSensorCards() {
         <div class="sc-last" id="last-${id}"></div>
         <div class="sc-count" id="count-${id}"><span>0</span> heute</div>
         <div class="sparkbar" id="spark-${id}">
-          ${Array(20).fill(`<div class="spark-seg" style="background:var(--surface2);height:3px"></div>`).join('')}
+          ${Array(24).fill(`<div class="spark-seg" style="background:var(--surface2);height:3px"></div>`).join('')}
         </div>
       </div>
     `).join('');
@@ -514,23 +514,31 @@ function updateSensorCards() {
 
     cnt.innerHTML = `<span>${todayEvts.length}</span> heute`;
 
-    // Sparkline
+    // Sparkline: Bewegungen pro Stunde, letzte 24 Stunden (links = älteste)
     const spark = document.getElementById(`spark-${id}`);
     const segs  = spark.querySelectorAll('.spark-seg');
-    const recent24 = sensorEvts.slice(0, 20);
+    const curHour = new Date(); curHour.setMinutes(0,0,0);
+    const curHourMs = curHour.getTime();
+    const hourCounts = Array(24).fill(0);
+    sensorEvts.forEach(e => {
+      const evd = new Date(e.created_at); evd.setMinutes(0,0,0);
+      const hoursAgo = Math.round((curHourMs - evd.getTime()) / 3600000);
+      if (hoursAgo >= 0 && hoursAgo < 24) hourCounts[23 - hoursAgo]++;
+    });
+    const maxCount = Math.max(...hourCounts, 1);
     segs.forEach((seg, i) => {
-      const e = recent24[recent24.length - 1 - i];
-      if (e) {
-        const age = (now - new Date(e.created_at)) / 3600000;
-        const opacity = Math.max(0.2, 1 - age / 10);
+      const count = hourCounts[i];
+      if (count > 0) {
         seg.style.background = s.hex;
-        seg.style.opacity    = opacity;
-        seg.style.height     = `${10 + Math.floor(Math.random() * 14)}px`;
+        seg.style.opacity    = '1';
+        seg.style.height     = `${3 + Math.round((count / maxCount) * 25)}px`;
       } else {
         seg.style.background = 'var(--surface2)';
-        seg.style.height = '3px';
-        seg.style.opacity = '1';
+        seg.style.opacity    = '1';
+        seg.style.height     = '3px';
       }
+      const h = (curHour.getHours() - (23 - i) + 24) % 24;
+      seg.title = `${String(h).padStart(2,'0')}:00 — ${count}×`;
     });
   });
 }
