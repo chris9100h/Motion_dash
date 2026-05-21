@@ -1,30 +1,27 @@
--- Garage-Türzustände. Wird vom Bash-Skript per REST-API gefüllt.
--- Speichert nur den neuesten Status pro Tür.
-
--- Alte View entfernen falls vorhanden
-drop view if exists public.door_status;
-
-create table if not exists public.door_status (
-  door_name     text              primary key,
+-- Garage-Türzustände — History aller Events
+create table if not exists public.door_events (
+  id            bigserial primary key,
+  door_name     text              not null,
   state         text              not null check (state in ('open', 'closed')),
-  created_at    timestamptz       not null default now(),
-  updated_at    timestamptz       not null default now()
+  created_at    timestamptz       not null default now()
 );
 
-alter table public.door_status enable row level security;
+-- Nur der neueste Status pro Tür (für schnelle Abfragen)
+create or replace view public.door_status as
+  select distinct on (door_name) door_name, state, created_at
+  from public.door_events
+  order by door_name, created_at desc;
 
-drop policy if exists "door_status insert"  on public.door_status;
-drop policy if exists "door_status select"  on public.door_status;
+alter table public.door_events enable row level security;
 
--- Öffentliche anon-Key darf lesen und schreiben (vom Bash-Skript und Dashboard).
-create policy "door_status insert"
-  on public.door_status for insert
+drop policy if exists "door_events insert"  on public.door_events;
+drop policy if exists "door_events select"  on public.door_events;
+
+-- Öffentliche anon-Key darf eintragen und lesen
+create policy "door_events insert"
+  on public.door_events for insert
   with check (true);
 
-create policy "door_status select"
-  on public.door_status for select
+create policy "door_events select"
+  on public.door_events for select
   using (true);
-
-create policy "door_status update"
-  on public.door_status for update
-  using (true) with check (true);

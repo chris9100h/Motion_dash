@@ -349,6 +349,14 @@
 
   <div id="doors-panel" style="margin-bottom:18px"></div>
 
+  <div class="panel" style="margin-bottom:18px">
+    <div class="panel-header">
+      <span class="panel-title">Türzustände</span>
+      <span id="door-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
+    </div>
+    <div class="events-list" id="door-events-list" style="max-height:300px"></div>
+  </div>
+
   <div class="panels">
     <div class="panel">
       <div class="panel-header">
@@ -752,6 +760,7 @@ function setupConnectionWatchdog() {
 
 // ── Türzustände ──────────────────────────────────────────────────────────────
 let doorStatus = {};
+let doorEvents = [];
 
 function renderDoorPanel() {
   const panel = document.getElementById('doors-panel');
@@ -774,12 +783,34 @@ function renderDoorPanel() {
   panel.innerHTML = html;
 }
 
+function renderDoorEventsList() {
+  const shown = doorEvents.slice(0, 50);
+  document.getElementById('door-count').textContent = `${shown.length}`;
+  document.getElementById('door-events-list').innerHTML = shown.map(e => {
+    const t = new Date(e.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const d = new Date(e.created_at).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' });
+    return `
+      <div class="event-row">
+        <div class="ev-dot" style="background:${e.state === 'open' ? '#D85A30' : '#1D9E75'}"></div>
+        <span class="ev-time">${t}</span>
+        <span class="ev-name">${e.door_name}</span>
+        <span class="ev-room">${e.state === 'open' ? 'Offen' : 'Geschlossen'}</span>
+      </div>`;
+  }).join('') || `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Keine Einträge</div>`;
+}
+
 async function loadDoorStatus() {
-  const { data } = await sb.from('door_status').select('*');
-  if (data) {
+  const { data: status } = await sb.from('door_status').select('*');
+  if (status) {
     doorStatus = {};
-    data.forEach(row => { doorStatus[row.door_name] = row; });
+    status.forEach(row => { doorStatus[row.door_name] = row; });
     renderDoorPanel();
+  }
+
+  const { data: events } = await sb.from('door_events').select('*').order('created_at', { ascending: false }).limit(50);
+  if (events) {
+    doorEvents = events;
+    renderDoorEventsList();
   }
 }
 
@@ -879,7 +910,14 @@ loadDoorStatus();
 // Realtime für door_events: neue Türeinträge sofort anzeigen
 sb.channel('door_changes').on('postgres_changes',
   { event: 'INSERT', schema: 'public', table: 'door_events' },
-  () => { loadDoorStatus(); }
+  payload => {
+    const e = payload.new;
+    doorEvents.unshift(e);
+    if (doorEvents.length > 50) doorEvents.pop();
+    doorStatus[e.door_name] = e;
+    renderDoorPanel();
+    renderDoorEventsList();
+  }
 ).subscribe();
 
 loadInitial().then(() => { setupRealtime(); setupConnectionWatchdog(); });
