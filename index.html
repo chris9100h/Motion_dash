@@ -774,27 +774,18 @@ let doorStatus = {};
 let doorEvents = [];
 
 function renderDoorPanel() {
-  const topPanel = document.getElementById('doors-panel');
   const detailPanel = document.getElementById('doors-status-detail');
+  if (!detailPanel) return;
 
   if (Object.keys(doorStatus).length === 0) {
-    topPanel.innerHTML = '';
     detailPanel.innerHTML = '';
     return;
   }
 
-  let html = '<div class="door-panel">';
-  let detailHtml = '';
-  Object.entries(doorStatus).forEach(([name, data]) => {
+  detailPanel.innerHTML = Object.entries(doorStatus).map(([name, data]) => {
     const time = new Date(data.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
     const d = new Date(data.created_at).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' });
-    html += `
-      <div class="door-card ${data.state}">
-        <div class="door-name">${name}</div>
-        <div class="door-state ${data.state}">${data.state === 'open' ? 'Offen' : 'Geschlossen'}</div>
-        <div class="door-time">${time}</div>
-      </div>`;
-    detailHtml += `
+    return `
       <div style="padding:10px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
         <div>
           <div style="font-size:13px; font-weight:500">${name}</div>
@@ -802,10 +793,7 @@ function renderDoorPanel() {
         </div>
         <span class="door-state ${data.state}" style="font-size:11px">${data.state === 'open' ? 'Offen' : 'Geschlossen'}</span>
       </div>`;
-  });
-  html += '</div>';
-  topPanel.innerHTML = html;
-  detailPanel.innerHTML = detailHtml;
+  }).join('');
 }
 
 function renderDoorEventsList() {
