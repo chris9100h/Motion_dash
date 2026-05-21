@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Bewegungsübersicht</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
@@ -28,6 +28,8 @@
       background: var(--bg); color: var(--text);
       font-family: var(--sans); font-size: 14px; line-height: 1.6;
       min-height: 100vh;
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
     }
 
     /* ── Topbar ── */
@@ -50,7 +52,18 @@
     .conn-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
     .conn-badge.live .conn-dot { animation: blink 2s ease-in-out infinite; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
-    .topbar-right { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+    .topbar-right {
+      font-family: var(--mono); font-size: 11px; color: var(--muted);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .icon-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer; transition: all 0.15s;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--border2); }
+    .icon-btn.armed { color: var(--teal-l); border-color: rgba(29,158,117,0.35); background: var(--teal-dim); }
 
     /* ── Layout ── */
     .main { padding: 22px 28px 40px; max-width: 1280px; margin: 0 auto; }
@@ -191,6 +204,74 @@
       .topbar { padding: 12px 14px; }
       .metrics, .sensors-grid { grid-template-columns: 1fr 1fr; }
     }
+    /* Heatmap auf schmalen Screens (iPhone) ohne horizontales Scrollen */
+    @media (max-width: 640px) {
+      .heatmap-body { padding: 12px 8px; }
+      .hm-grid {
+        grid-template-columns: 44px repeat(24, 1fr);
+        gap: 2px; min-width: 0;
+      }
+      .hm-row-label { font-size: 9px; padding-right: 4px; }
+      .hm-col-label { font-size: 7px; }
+      .hm-cell { height: 15px; }
+    }
+
+    /* ── Einstellungs-Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 50;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 12px; width: 100%; max-width: 380px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      font-size: 13px; font-weight: 500;
+    }
+    .modal-close {
+      background: transparent; border: none; color: var(--muted);
+      font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 16px 18px; }
+    .set-section { margin-bottom: 18px; }
+    .set-label {
+      font-size: 10px; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .set-check {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 0; font-size: 13px; cursor: pointer;
+    }
+    .set-check input { accent-color: var(--teal); width: 16px; height: 16px; }
+    .set-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .set-room {
+      font-size: 10px; font-family: var(--mono); color: var(--muted);
+      margin-left: auto;
+    }
+    .set-row { display: flex; gap: 16px; }
+    .set-row label { font-size: 13px; display: flex; align-items: center; gap: 6px; }
+    .set-row select {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border2); border-radius: 6px;
+      padding: 5px 8px; font-family: var(--mono); font-size: 12px;
+    }
+    .set-hint { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+    .set-status { font-size: 12px; min-height: 18px; margin-bottom: 10px; }
+    .set-status.ok  { color: var(--teal-l); }
+    .set-status.err { color: var(--coral-l); }
+    .set-save {
+      width: 100%; padding: 9px; border-radius: 8px; cursor: pointer;
+      background: var(--teal-dim); color: var(--teal-l);
+      border: 1px solid rgba(29,158,117,0.35);
+      font-family: var(--sans); font-size: 13px; transition: all 0.15s;
+    }
+    .set-save:hover { background: rgba(29,158,117,0.25); }
   </style>
 </head>
 <body>
@@ -203,7 +284,15 @@
       <span id="conn-label">Verbinde…</span>
     </div>
   </div>
-  <div class="topbar-right" id="clock"></div>
+  <div class="topbar-right">
+    <button class="icon-btn" id="settings-btn" onclick="openSettings()" aria-label="Push-Benachrichtigungen" title="Push-Benachrichtigungen">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+    <span id="clock"></span>
+  </div>
 </div>
 
 <div class="main">
@@ -251,6 +340,31 @@
       </div>
       <div class="filter-bar" id="filter-bar"></div>
       <div class="events-list" id="events-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <div class="modal-head">
+      <span>Push-Benachrichtigungen</span>
+      <button class="modal-close" onclick="closeSettings()" aria-label="Schließen">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="set-section">
+        <div class="set-label">Sensoren, die benachrichtigen</div>
+        <div id="notify-sensors"></div>
+      </div>
+      <div class="set-section">
+        <div class="set-label">Aktiv-Zeitraum</div>
+        <div class="set-row">
+          <label>von <select id="win-start"></select></label>
+          <label>bis <select id="win-end"></select></label>
+        </div>
+        <div class="set-hint">In diesem Zeitraum wird bei jeder Bewegung der gewählten Sensoren eine Pushover-Nachricht gesendet – auch wenn das Dashboard geschlossen ist. Gleiche Start- und Endzeit = ganztägig.</div>
+      </div>
+      <div class="set-status" id="set-status"></div>
+      <button class="set-save" onclick="saveSettings()">Speichern</button>
     </div>
   </div>
 </div>
@@ -539,9 +653,97 @@ function setupRealtime() {
     });
 }
 
+// ── Push-Benachrichtigungen (Einstellungen) ──────────────────────────────────
+let notifySettings = { enabled_sensors: [], window_start: 22, window_end: 6 };
+
+function renderNotifySensors() {
+  document.getElementById('notify-sensors').innerHTML =
+    Object.entries(SENSORS).map(([id, s]) => `
+      <label class="set-check">
+        <input type="checkbox" value="${id}" ${notifySettings.enabled_sensors.includes(parseInt(id)) ? 'checked' : ''}>
+        <span class="set-dot" style="background:${s.hex}"></span>
+        <span>${s.name}</span>
+        <span class="set-room">${s.room}</span>
+      </label>`).join('');
+}
+
+function fillHourSelect(el, value) {
+  el.innerHTML = Array.from({ length: 24 }, (_, h) =>
+    `<option value="${h}" ${h === value ? 'selected' : ''}>${String(h).padStart(2,'0')}:00</option>`
+  ).join('');
+}
+
+function updateArmedBadge() {
+  document.getElementById('settings-btn')
+    .classList.toggle('armed', notifySettings.enabled_sensors.length > 0);
+}
+
+async function loadNotifySettings() {
+  const { data } = await sb.from('notify_settings').select('*').eq('id', 1).maybeSingle();
+  if (data) {
+    notifySettings = {
+      enabled_sensors: data.enabled_sensors || [],
+      window_start: data.window_start ?? 22,
+      window_end: data.window_end ?? 6,
+    };
+  }
+  updateArmedBadge();
+}
+
+function openSettings() {
+  renderNotifySensors();
+  fillHourSelect(document.getElementById('win-start'), notifySettings.window_start);
+  fillHourSelect(document.getElementById('win-end'), notifySettings.window_end);
+  const status = document.getElementById('set-status');
+  status.textContent = ''; status.className = 'set-status';
+  document.getElementById('settings-modal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+
+async function saveSettings() {
+  const sensors = [...document.querySelectorAll('#notify-sensors input:checked')]
+    .map(i => parseInt(i.value));
+  const ws = parseInt(document.getElementById('win-start').value);
+  const we = parseInt(document.getElementById('win-end').value);
+  const status = document.getElementById('set-status');
+  status.className = 'set-status';
+  status.textContent = 'Speichere…';
+
+  const { error } = await sb.from('notify_settings')
+    .update({
+      enabled_sensors: sensors,
+      window_start: ws,
+      window_end: we,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', 1);
+
+  if (error) {
+    status.classList.add('err');
+    status.textContent = 'Fehler: ' + error.message;
+  } else {
+    notifySettings = { enabled_sensors: sensors, window_start: ws, window_end: we };
+    updateArmedBadge();
+    status.classList.add('ok');
+    status.textContent = 'Gespeichert.';
+  }
+}
+
+// ── iOS: Zoom unterbinden (Pinch & Doppeltipp) ───────────────────────────────
+['gesturestart', 'gesturechange', 'gestureend'].forEach(evt =>
+  document.addEventListener(evt, e => e.preventDefault())
+);
+document.addEventListener('touchmove', e => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 buildSensorCards();
 buildFilterBar();
+loadNotifySettings();
 loadInitial().then(() => setupRealtime());
 </script>
 </body>
