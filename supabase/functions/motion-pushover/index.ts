@@ -1,15 +1,15 @@
 // Edge Function: sendet bei Bewegungs-Events eine Pushover-Nachricht.
 // Ausgelöst per Database Webhook auf INSERT in public.motion_events.
 //
-// Benötigte Secrets (supabase secrets set ...):
-//   PUSHOVER_TOKEN  – API-Token der Pushover-Anwendung
-//   PUSHOVER_USER   – User-/Group-Key des Empfängers
+// >>> VOR DEM DEPLOY: die beiden Platzhalter unten durch die echten
+// >>> Pushover-Werte ersetzen. ACHTUNG: Das Repo ist öffentlich –
+// >>> die ausgefüllte Datei nicht committen/pushen.
 // SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY stellt Supabase automatisch bereit.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const PUSHOVER_TOKEN = Deno.env.get("PUSHOVER_TOKEN") ?? "";
-const PUSHOVER_USER  = Deno.env.get("PUSHOVER_USER") ?? "";
+const PUSHOVER_TOKEN = "DEIN_PUSHOVER_APP_TOKEN"; // <-- ersetzen
+const PUSHOVER_USER  = "DEIN_PUSHOVER_USER_KEY";  // <-- ersetzen
 const SUPABASE_URL   = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY    = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const TZ = "Europe/Vienna";
