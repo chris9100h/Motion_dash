@@ -827,16 +827,20 @@ function renderDoorEventsList() {
 }
 
 async function loadDoorStatus() {
-  const { data: status } = await sb.from('door_status').select('*');
-  if (status) {
-    doorStatus = {};
-    status.forEach(row => { doorStatus[row.door_name] = row; });
-    renderDoorPanel();
-  }
+  const { data: evts } = await sb
+    .from('door_events')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50);
 
-  const { data: events } = await sb.from('door_events').select('*').order('created_at', { ascending: false }).limit(50);
-  if (events) {
-    doorEvents = events;
+  if (evts) {
+    doorEvents = evts;
+    // Aktuellen Status pro Tür aus dem neuesten Eintrag ableiten
+    doorStatus = {};
+    evts.forEach(e => {
+      if (!doorStatus[e.door_name]) doorStatus[e.door_name] = e;
+    });
+    renderDoorPanel();
     renderDoorEventsList();
   }
 }
