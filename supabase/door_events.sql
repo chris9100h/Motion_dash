@@ -1,5 +1,9 @@
 -- Garage-Türzustände. Wird vom Bash-Skript per REST-API gefüllt.
 -- Speichert nur den neuesten Status pro Tür.
+
+-- Alte View entfernen falls vorhanden
+drop view if exists public.door_status;
+
 create table if not exists public.door_status (
   door_name     text              primary key,
   state         text              not null check (state in ('open', 'closed')),
