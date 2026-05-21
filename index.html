@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bewegungsübersicht</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #0e0f11;
+      --surface:  #16181c;
+      --surface2: #1e2128;
+      --border:   rgba(255,255,255,0.07);
+      --border2:  rgba(255,255,255,0.14);
+      --text:     #e8e9eb;
+      --muted:    #6b7180;
+      --mono:     'IBM Plex Mono', monospace;
+      --sans:     'IBM Plex Sans', sans-serif;
+
+      --teal:     #1D9E75; --teal-l: #5DCAA5; --teal-dim: rgba(29,158,117,0.15);
+      --blue:     #378ADD; --blue-l: #85B7EB; --blue-dim: rgba(55,138,221,0.15);
+      --amber:    #BA7517; --amber-l:#EF9F27; --amber-dim:rgba(186,117,23,0.15);
+      --coral:    #D85A30; --coral-l:#F0997B; --coral-dim:rgba(216,90,48,0.15);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--sans); font-size: 14px; line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 28px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--bg); z-index: 20;
+      backdrop-filter: blur(8px);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 14px; }
+    .logo { font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; color: var(--teal-l); }
+    .conn-badge {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-family: var(--mono);
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 3px 10px; border-radius: 20px; color: var(--muted);
+      transition: all 0.3s;
+    }
+    .conn-badge.live { color: var(--teal-l); border-color: rgba(29,158,117,0.3); background: var(--teal-dim); }
+    .conn-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .conn-badge.live .conn-dot { animation: blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+    .topbar-right { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+    /* ── Layout ── */
+    .main { padding: 22px 28px 40px; max-width: 1280px; margin: 0 auto; }
+
+    /* ── Metrics ── */
+    .metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
+    .metric {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 18px;
+    }
+    .metric-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .metric-value { font-family: var(--mono); font-size: 28px; font-weight: 500; }
+    .metric-value.sm { font-size: 17px; padding-top: 5px; }
+    .metric-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    /* ── Sensor cards ── */
+    .sensors-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
+    .sensor-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 15px 16px;
+      transition: border-color 0.4s, box-shadow 0.4s;
+      position: relative; overflow: hidden;
+    }
+    .sensor-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: transparent; transition: background 0.4s;
+    }
+    .sensor-card.motion { border-color: var(--teal); }
+    .sensor-card.motion::before { background: var(--teal); }
+
+    .sc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .sc-name { font-size: 14px; font-weight: 500; }
+    .sc-meta { font-size: 10px; color: var(--muted); margin-top: 1px; font-family: var(--mono); }
+    .sc-pill {
+      font-size: 10px; padding: 2px 9px; border-radius: 20px;
+      font-family: var(--mono); border: 1px solid transparent;
+      transition: all 0.3s; white-space: nowrap;
+    }
+    .sc-pill.idle   { background: var(--surface2); color: var(--muted); border-color: var(--border); }
+    .sc-pill.active { background: var(--teal-dim); color: var(--teal-l); border-color: rgba(29,158,117,0.35); }
+    .sc-last { font-size: 11px; color: var(--muted); margin-bottom: 10px; min-height: 16px; }
+    .sc-count { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+    .sc-count span { color: var(--text); font-size: 14px; }
+
+    /* Sparkline */
+    .sparkbar { display: flex; gap: 2px; align-items: flex-end; height: 28px; margin-top: 10px; }
+    .spark-seg { flex: 1; border-radius: 1px; transition: all 0.4s; min-height: 3px; }
+
+    /* ── Main panels ── */
+    .panels { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
+
+    .panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 13px 18px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .panel-title { font-size: 13px; font-weight: 500; }
+    .panel-tabs { display: flex; gap: 4px; }
+    .tab-btn {
+      font-size: 11px; padding: 3px 10px; border-radius: 6px; cursor: pointer;
+      background: transparent; color: var(--muted); border: 1px solid transparent;
+      font-family: var(--sans); transition: all 0.15s;
+    }
+    .tab-btn.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+    /* Heatmap */
+    .heatmap-body { padding: 16px 18px; overflow-x: auto; }
+    .hm-grid {
+      display: grid; grid-template-columns: 62px repeat(24, 1fr);
+      gap: 3px; align-items: center; min-width: 480px;
+    }
+    .hm-row-label { font-size: 10px; color: var(--muted); text-align: right; padding-right: 8px; white-space: nowrap; }
+    .hm-col-label { font-size: 9px; color: var(--muted); text-align: center; font-family: var(--mono); }
+    .hm-cell {
+      height: 22px; border-radius: 3px; background: var(--surface2);
+      cursor: default; transition: background 0.3s;
+      position: relative;
+    }
+    .hm-cell:hover::after {
+      content: attr(data-tip);
+      position: absolute; bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%);
+      background: var(--surface2); border: 1px solid var(--border2);
+      color: var(--text); font-size: 10px; font-family: var(--mono);
+      padding: 3px 8px; border-radius: 5px; white-space: nowrap;
+      pointer-events: none; z-index: 10;
+    }
+
+    /* Events panel */
+    .filter-bar {
+      display: flex; gap: 6px; padding: 10px 14px;
+      border-bottom: 1px solid var(--border); flex-wrap: wrap; flex-shrink: 0;
+    }
+    .filter-btn {
+      font-size: 10px; padding: 3px 10px; border-radius: 20px; cursor: pointer;
+      background: transparent; color: var(--muted); border: 1px solid var(--border);
+      font-family: var(--sans); transition: all 0.15s;
+    }
+    .filter-btn.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+    .events-list { overflow-y: auto; flex: 1; max-height: 480px; }
+    .events-list::-webkit-scrollbar { width: 3px; }
+    .events-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .event-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 16px; border-bottom: 1px solid var(--border);
+      transition: background 0.1s; cursor: default;
+    }
+    .event-row:hover { background: var(--surface2); }
+    .event-row:last-child { border-bottom: none; }
+    .event-row.new { animation: flash 0.6s ease-out; }
+    @keyframes flash { 0%{background: rgba(29,158,117,0.15)} 100%{background:transparent} }
+
+    .ev-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .ev-time { font-family: var(--mono); font-size: 10px; color: var(--muted); min-width: 50px; }
+    .ev-name { font-size: 12px; flex: 1; }
+    .ev-room {
+      font-size: 10px; font-family: var(--mono); padding: 1px 6px;
+      border-radius: 4px; background: var(--surface2); color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .panels { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 800px) {
+      .metrics { grid-template-columns: repeat(2,1fr); }
+      .sensors-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 500px) {
+      .main { padding: 14px 14px 32px; }
+      .topbar { padding: 12px 14px; }
+      .metrics, .sensors-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="logo">HUE/MOTION</span>
+    <div class="conn-badge" id="conn-badge">
+      <span class="conn-dot"></span>
+      <span id="conn-label">Verbinde…</span>
+    </div>
+  </div>
+  <div class="topbar-right" id="clock"></div>
+</div>
+
+<div class="main">
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Ereignisse heute</div>
+      <div class="metric-value" id="m-today">–</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Aktive Sensoren</div>
+      <div class="metric-value" id="m-active">–</div>
+      <div class="metric-sub" id="m-active-sub"></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Aktivster Bereich</div>
+      <div class="metric-value sm" id="m-top">–</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Letzte Bewegung</div>
+      <div class="metric-value sm" id="m-last">–</div>
+      <div class="metric-sub" id="m-last-room"></div>
+    </div>
+  </div>
+
+  <div class="sensors-grid" id="sensors-grid"></div>
+
+  <div class="panels">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Aktivitäts-Heatmap</span>
+        <div class="panel-tabs">
+          <button class="tab-btn active" onclick="setHeatRange(this,1)">Heute</button>
+          <button class="tab-btn" onclick="setHeatRange(this,7)">7 Tage</button>
+        </div>
+      </div>
+      <div class="heatmap-body">
+        <div class="hm-grid" id="heatmap"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Ereignisse</span>
+        <span id="event-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
+      </div>
+      <div class="filter-bar" id="filter-bar"></div>
+      <div class="events-list" id="events-list"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL  = 'https://ebbuvdzgstrhrcsbrlez.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViYnV2ZHpnc3RyaHJjc2JybGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMjc4ODAsImV4cCI6MjA5MTYwMzg4MH0.RyTzHiqV1TPSZtM7lgenBJbUCTjj5fCUhoWauifjlIE';
+
+const SENSORS = {
+  83:  { name: 'Galerie',  room: 'OG', color: '--teal',  hex: '#1D9E75' },
+  57:  { name: 'Haustür',  room: 'EG', color: '--blue',  hex: '#378ADD' },
+  143: { name: 'Keller',   room: 'UG', color: '--amber', hex: '#BA7517' },
+  95:  { name: 'Vorhaus',  room: 'EG', color: '--coral', hex: '#D85A30' },
+};
+
+const HM_STOPS = ['#1e2128','#0a3d28','#0f6e56','#1D9E75','#5DCAA5'];
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let events = [];          // alle geladenen Events (presence=true)
+let activeFilter = 'all';
+let heatDays = 1;
+const lastState = {};     // sensor_id → letzter presence-Wert
+
+// ── Uhr ──────────────────────────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleString('de-AT', { weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Sensor-Cards aufbauen ────────────────────────────────────────────────────
+function buildSensorCards() {
+  document.getElementById('sensors-grid').innerHTML =
+    Object.entries(SENSORS).map(([id, s]) => `
+      <div class="sensor-card" id="sc-${id}">
+        <div class="sc-top">
+          <div>
+            <div class="sc-name">${s.name}</div>
+            <div class="sc-meta">${s.room} · ID ${id}</div>
+          </div>
+          <span class="sc-pill idle" id="pill-${id}">ruhig</span>
+        </div>
+        <div class="sc-last" id="last-${id}"></div>
+        <div class="sc-count" id="count-${id}"><span>0</span> heute</div>
+        <div class="sparkbar" id="spark-${id}">
+          ${Array(20).fill(`<div class="spark-seg" style="background:var(--surface2);height:3px"></div>`).join('')}
+        </div>
+      </div>
+    `).join('');
+}
+
+// ── Filter-Bar aufbauen ──────────────────────────────────────────────────────
+function buildFilterBar() {
+  document.getElementById('filter-bar').innerHTML =
+    `<button class="filter-btn active" onclick="setFilter(this,'all')">Alle</button>` +
+    Object.entries(SENSORS).map(([id, s]) =>
+      `<button class="filter-btn" onclick="setFilter(this,'${id}')"
+         style="border-left:2px solid ${s.hex}">${s.name}</button>`
+    ).join('');
+}
+
+function setFilter(btn, id) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter = id;
+  renderEvents();
+}
+
+// ── Sensor-Cards aktualisieren ───────────────────────────────────────────────
+function updateSensorCards() {
+  const now = Date.now();
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+
+  Object.entries(SENSORS).forEach(([id, s]) => {
+    const sid = parseInt(id);
+    const sensorEvts = events.filter(e => e.sensor_id === sid);
+    const todayEvts  = sensorEvts.filter(e => new Date(e.created_at) >= todayStart);
+    const latest     = sensorEvts[0];
+
+    const isActive = lastState[sid] === true;
+
+    const card = document.getElementById(`sc-${id}`);
+    const pill = document.getElementById(`pill-${id}`);
+    const last = document.getElementById(`last-${id}`);
+    const cnt  = document.getElementById(`count-${id}`);
+    if (!card) return;
+
+    card.classList.toggle('motion', isActive);
+    pill.className = `sc-pill ${isActive ? 'active' : 'idle'}`;
+    pill.textContent = isActive ? 'aktiv' : 'ruhig';
+
+    if (latest) {
+      const ago = Math.round((now - new Date(latest.created_at)) / 60000);
+      const t = new Date(latest.created_at).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' });
+      last.textContent = `Zuletzt: ${t} (vor ${ago < 1 ? '<1' : ago} min)`;
+    } else {
+      last.textContent = 'Keine Daten';
+    }
+
+    cnt.innerHTML = `<span>${todayEvts.length}</span> heute`;
+
+    // Sparkline
+    const spark = document.getElementById(`spark-${id}`);
+    const segs  = spark.querySelectorAll('.spark-seg');
+    const recent24 = sensorEvts.slice(0, 20);
+    segs.forEach((seg, i) => {
+      const e = recent24[recent24.length - 1 - i];
+      if (e) {
+        const age = (now - new Date(e.created_at)) / 3600000;
+        const opacity = Math.max(0.2, 1 - age / 10);
+        seg.style.background = s.hex;
+        seg.style.opacity    = opacity;
+        seg.style.height     = `${10 + Math.floor(Math.random() * 14)}px`;
+      } else {
+        seg.style.background = 'var(--surface2)';
+        seg.style.height = '3px';
+        seg.style.opacity = '1';
+      }
+    });
+  });
+}
+
+// ── Metriken ─────────────────────────────────────────────────────────────────
+function updateMetrics() {
+  const now = Date.now();
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const todayEvts  = events.filter(e => new Date(e.created_at) >= todayStart);
+
+  document.getElementById('m-today').textContent = todayEvts.length;
+
+  // Aktivste Sensoren in letzten 10 min
+  const active = Object.keys(SENSORS).filter(id => lastState[parseInt(id)] === true);
+  document.getElementById('m-active').textContent = `${active.length} / ${Object.keys(SENSORS).length}`;
+  document.getElementById('m-active-sub').textContent = active.length
+    ? active.map(id => SENSORS[id].name).join(', ')
+    : 'alle ruhig';
+
+  // Aktivster Bereich heute
+  const counts = {};
+  todayEvts.forEach(e => { counts[e.sensor_id] = (counts[e.sensor_id] || 0) + 1; });
+  const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
+  document.getElementById('m-top').textContent = top ? SENSORS[top[0]]?.name || '–' : '–';
+
+  // Letzte Bewegung
+  const latest = events[0];
+  if (latest) {
+    const ago = Math.round((now - new Date(latest.created_at)) / 60000);
+    document.getElementById('m-last').textContent = ago < 1 ? 'jetzt' : `vor ${ago} min`;
+    document.getElementById('m-last-room').textContent = SENSORS[latest.sensor_id]?.name || latest.sensor_id;
+  }
+}
+
+// ── Events rendern ────────────────────────────────────────────────────────────
+function renderEvents(newId = null) {
+  const filtered = activeFilter === 'all'
+    ? events
+    : events.filter(e => String(e.sensor_id) === activeFilter);
+
+  const shown = filtered.slice(0, 100);
+  document.getElementById('event-count').textContent = `${shown.length}`;
+
+  document.getElementById('events-list').innerHTML = shown.map((e, i) => {
+    const t = new Date(e.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const s = SENSORS[e.sensor_id];
+    const isNew = newId && e.id === newId && i === 0;
+    return `
+      <div class="event-row${isNew ? ' new' : ''}">
+        <div class="ev-dot" style="background:${s?.hex || '#888'}"></div>
+        <span class="ev-time">${t}</span>
+        <span class="ev-name">${s?.name || e.sensor_name}</span>
+        <span class="ev-room">${s?.room || e.room}</span>
+      </div>`;
+  }).join('') || `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Keine Ereignisse</div>`;
+}
+
+// ── Heatmap ───────────────────────────────────────────────────────────────────
+function renderHeatmap() {
+  const since = new Date(Date.now() - heatDays * 86400000);
+  const subset = events.filter(e => new Date(e.created_at) >= since);
+
+  // Aggregieren: { sensor_id: [24 Stunden] }
+  const data = {};
+  Object.keys(SENSORS).forEach(id => { data[id] = Array(24).fill(0); });
+  subset.forEach(e => {
+    const h = new Date(e.created_at).getHours();
+    if (data[e.sensor_id]) data[e.sensor_id][h]++;
+  });
+
+  const hours = Array.from({length:24}, (_,i) => i);
+  let html = '<div></div>' + hours.map(h => `<div class="hm-col-label">${String(h).padStart(2,'0')}</div>`).join('');
+
+  Object.entries(SENSORS).forEach(([id, s]) => {
+    const row = data[id];
+    const max = Math.max(...row, 1);
+    html += `<div class="hm-row-label">${s.name}</div>`;
+    html += row.map((v, h) => {
+      const lvl = v === 0 ? 0 : Math.ceil((v / max) * (HM_STOPS.length - 1));
+      return `<div class="hm-cell" style="background:${HM_STOPS[lvl]}" data-tip="${s.name} ${String(h).padStart(2,'0')}:00 — ${v}×"></div>`;
+    }).join('');
+  });
+
+  document.getElementById('heatmap').innerHTML = html;
+}
+
+function setHeatRange(btn, days) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  heatDays = days;
+  renderHeatmap();
+}
+
+// ── Initialdaten laden ────────────────────────────────────────────────────────
+async function loadInitial() {
+  const since = new Date(Date.now() - 7 * 86400000).toISOString();
+
+  const { data, error } = await sb
+    .from('motion_events')
+    .select('*')
+    .eq('presence', true)
+    .gte('created_at', since)
+    .order('created_at', { ascending: false })
+    .limit(500);
+
+  if (error) { console.error('Ladefehler:', error); return; }
+  events = data || [];
+
+  // Letzten Zustand pro Sensor ermitteln
+  const { data: allLast } = await sb
+    .from('motion_events')
+    .select('sensor_id, presence, created_at')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (allLast) {
+    const seen = new Set();
+    allLast.forEach(e => {
+      if (!seen.has(e.sensor_id)) {
+        lastState[e.sensor_id] = e.presence;
+        seen.add(e.sensor_id);
+      }
+    });
+  }
+
+  updateMetrics();
+  updateSensorCards();
+  renderEvents();
+  renderHeatmap();
+}
+
+// ── Realtime-Subscription ────────────────────────────────────────────────────
+function setupRealtime() {
+  sb.channel('motion_events')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'motion_events',
+    }, payload => {
+      const e = payload.new;
+      lastState[e.sensor_id] = e.presence;
+
+      if (e.presence) {
+        events.unshift(e);
+        if (events.length > 500) events.pop();
+      }
+
+      updateMetrics();
+      updateSensorCards();
+      renderEvents(e.id);
+      renderHeatmap();
+    })
+    .subscribe(status => {
+      const badge = document.getElementById('conn-badge');
+      const label = document.getElementById('conn-label');
+      if (status === 'SUBSCRIBED') {
+        badge.classList.add('live');
+        label.textContent = 'LIVE';
+      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+        badge.classList.remove('live');
+        label.textContent = 'getrennt';
+      } else {
+        label.textContent = 'Verbinde…';
+      }
+    });
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+buildSensorCards();
+buildFilterBar();
+loadInitial().then(() => setupRealtime());
+</script>
+</body>
+</html>
