@@ -110,7 +110,15 @@
 
     /* Sparkline */
     .sparkbar { display: flex; gap: 2px; align-items: flex-end; height: 28px; margin-top: 10px; }
-    .spark-seg { flex: 1; border-radius: 1px; transition: all 0.4s; min-height: 3px; }
+    .spark-seg { flex: 1; border-radius: 1px; transition: all 0.4s; min-height: 3px; position: relative; }
+    .spark-seg:hover::after {
+      content: attr(data-tip);
+      position: absolute; bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%);
+      background: var(--surface2); border: 1px solid var(--border2);
+      color: var(--text); font-size: 10px; font-family: var(--mono);
+      padding: 3px 8px; border-radius: 5px; white-space: nowrap;
+      pointer-events: none; z-index: 10;
+    }
 
     /* ── Main panels ── */
     .panels { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
@@ -538,7 +546,7 @@ function updateSensorCards() {
         seg.style.height     = '3px';
       }
       const h = (curHour.getHours() - (23 - i) + 24) % 24;
-      seg.title = `${String(h).padStart(2,'0')}:00 — ${count}×`;
+      seg.dataset.tip = `${String(h).padStart(2,'0')}:00 — ${count}×`;
     });
   });
 }
