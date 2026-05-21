@@ -652,23 +652,32 @@ function handleRealtimeInsert(payload) {
 }
 
 function setupRealtime() {
-  if (rtChannel) { sb.removeChannel(rtChannel); rtChannel = null; }
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+
+  // Alten Kanal entfernen. Dessen CLOSED-Event darf keinen Reconnect auslösen –
+  // der Status-Callback unten ignoriert daher alles außer dem aktuellen Kanal.
+  const old = rtChannel;
+  rtChannel = null;
+  if (old) sb.removeChannel(old);
   setConnState('connecting');
 
-  rtChannel = sb.channel('motion_events_' + Date.now())
+  const channel = sb.channel('motion_events_' + Date.now())
     .on('postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'motion_events' },
-      handleRealtimeInsert)
-    .subscribe(status => {
-      if (status === 'SUBSCRIBED') {
-        setConnState('live');
-      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        setConnState('offline');
-        scheduleReconnect();
-      } else {
-        setConnState('connecting');
-      }
-    });
+      handleRealtimeInsert);
+  rtChannel = channel;
+
+  channel.subscribe(status => {
+    if (rtChannel !== channel) return;   // veralteter Kanal: Status ignorieren
+    if (status === 'SUBSCRIBED') {
+      setConnState('live');
+    } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      setConnState('offline');
+      scheduleReconnect();
+    } else {
+      setConnState('connecting');
+    }
+  });
 }
 
 function scheduleReconnect() {
