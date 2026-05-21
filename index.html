@@ -115,6 +115,8 @@
     /* ── Main panels ── */
     .panels { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
 
+    .panels.full { grid-template-columns: 1fr 1fr; }
+
     .panel {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 10px; overflow: hidden;
@@ -349,7 +351,7 @@
 
   <div id="doors-panel" style="margin-bottom:18px"></div>
 
-  <div class="panels">
+  <div class="panels full">
     <div class="panel">
       <div class="panel-header">
         <span class="panel-title">Türzustände (Log)</span>
