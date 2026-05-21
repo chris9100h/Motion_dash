@@ -193,6 +193,26 @@
       border: 1px solid var(--border);
     }
 
+    /* ── Event Filter Panel ── */
+    .event-filter-panel {
+      display: none; padding: 10px 14px; gap: 10px;
+      border-bottom: 1px solid var(--border); flex-wrap: wrap; align-items: flex-end;
+    }
+    .event-filter-panel.open { display: flex; }
+    .filter-field { display: flex; flex-direction: column; gap: 4px; }
+    .filter-field span { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .filter-field select, .filter-field input[type=datetime-local] {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border2); border-radius: 6px;
+      padding: 5px 8px; font-family: var(--mono); font-size: 11px;
+    }
+    .filter-field input[type=datetime-local]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+    .filter-reset {
+      font-size: 11px; color: var(--muted); background: transparent;
+      border: none; cursor: pointer; padding: 0; align-self: flex-end; padding-bottom: 6px;
+    }
+    .filter-reset:hover { color: var(--text); }
+
     /* ── Responsive ── */
     @media (max-width: 1024px) {
       .panels { grid-template-columns: 1fr; }
@@ -345,9 +365,28 @@
     <div class="panel">
       <div class="panel-header">
         <span class="panel-title">Ereignisse</span>
-        <span id="event-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="event-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
+          <button class="tab-btn" id="event-filter-btn" onclick="toggleEventFilter()">Filter</button>
+        </div>
       </div>
-      <div class="filter-bar" id="filter-bar"></div>
+      <div class="event-filter-panel" id="event-filter-panel">
+        <div class="filter-field">
+          <span>Sensor</span>
+          <select id="ef-sensor" onchange="renderEvents()">
+            <option value="all">Alle</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <span>Von</span>
+          <input type="datetime-local" id="ef-from" onchange="renderEvents()">
+        </div>
+        <div class="filter-field">
+          <span>Bis</span>
+          <input type="datetime-local" id="ef-to" onchange="renderEvents()">
+        </div>
+        <button class="filter-reset" onclick="resetEventFilter()">Zurücksetzen</button>
+      </div>
       <div class="events-list" id="events-list"></div>
     </div>
   </div>
@@ -387,8 +426,7 @@ const HM_STOPS = ['#1e2128','#0a3d28','#0f6e56','#1D9E75','#5DCAA5'];
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-let events = [];          // alle geladenen Events (presence=true)
-let activeFilter = 'all';
+let events = [];
 let heatDays = 1;
 const lastState = {};     // sensor_id → letzter presence-Wert
 
@@ -421,20 +459,25 @@ function buildSensorCards() {
     `).join('');
 }
 
-// ── Filter-Bar aufbauen ──────────────────────────────────────────────────────
-function buildFilterBar() {
-  document.getElementById('filter-bar').innerHTML =
-    `<button class="filter-btn active" onclick="setFilter(this,'all')">Alle</button>` +
+// ── Ereignisse Filter ────────────────────────────────────────────────────────
+function buildEventFilter() {
+  const sel = document.getElementById('ef-sensor');
+  if (!sel) return;
+  sel.innerHTML = `<option value="all">Alle</option>` +
     Object.entries(SENSORS).map(([id, s]) =>
-      `<button class="filter-btn" onclick="setFilter(this,'${id}')"
-         style="border-left:2px solid ${s.hex}">${s.name}</button>`
+      `<option value="${id}">${s.name} (${s.room})</option>`
     ).join('');
 }
 
-function setFilter(btn, id) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  activeFilter = id;
+function toggleEventFilter() {
+  const open = document.getElementById('event-filter-panel').classList.toggle('open');
+  document.getElementById('event-filter-btn').classList.toggle('active', open);
+}
+
+function resetEventFilter() {
+  document.getElementById('ef-sensor').value = 'all';
+  document.getElementById('ef-from').value = '';
+  document.getElementById('ef-to').value = '';
   renderEvents();
 }
 
@@ -517,9 +560,15 @@ function updateMetrics() {
 
 // ── Events rendern ────────────────────────────────────────────────────────────
 function renderEvents(newId = null) {
-  const filtered = activeFilter === 'all'
-    ? events
-    : events.filter(e => String(e.sensor_id) === activeFilter);
+  const sensor  = document.getElementById('ef-sensor')?.value || 'all';
+  const fromVal = document.getElementById('ef-from')?.value;
+  const toVal   = document.getElementById('ef-to')?.value;
+  const from = fromVal ? new Date(fromVal) : null;
+  const to   = toVal   ? new Date(toVal)   : null;
+
+  let filtered = sensor === 'all' ? events : events.filter(e => String(e.sensor_id) === sensor);
+  if (from) filtered = filtered.filter(e => new Date(e.created_at) >= from);
+  if (to)   filtered = filtered.filter(e => new Date(e.created_at) <= to);
 
   const shown = filtered.slice(0, 100);
   document.getElementById('event-count').textContent = `${shown.length}`;
@@ -898,7 +947,7 @@ document.addEventListener('touchmove', e => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 buildSensorCards();
-buildFilterBar();
+buildEventFilter();
 buildDoorFilterBar();
 loadNotifySettings();
 loadDoorStatus();
