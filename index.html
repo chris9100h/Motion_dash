@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Bewegungsübersicht</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
@@ -28,6 +28,8 @@
       background: var(--bg); color: var(--text);
       font-family: var(--sans); font-size: 14px; line-height: 1.6;
       min-height: 100vh;
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
     }
 
     /* ── Topbar ── */
@@ -50,7 +52,18 @@
     .conn-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
     .conn-badge.live .conn-dot { animation: blink 2s ease-in-out infinite; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
-    .topbar-right { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+    .topbar-right {
+      font-family: var(--mono); font-size: 11px; color: var(--muted);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .icon-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer; transition: all 0.15s;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--border2); }
+    .icon-btn.armed { color: var(--teal-l); border-color: rgba(29,158,117,0.35); background: var(--teal-dim); }
 
     /* ── Layout ── */
     .main { padding: 22px 28px 40px; max-width: 1280px; margin: 0 auto; }
@@ -101,6 +114,8 @@
 
     /* ── Main panels ── */
     .panels { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
+
+    .panels.full { grid-template-columns: 1fr 1fr; }
 
     .panel {
       background: var(--surface); border: 1px solid var(--border);
@@ -178,6 +193,26 @@
       border: 1px solid var(--border);
     }
 
+    /* ── Event Filter Panel ── */
+    .event-filter-panel {
+      display: none; padding: 10px 14px; gap: 10px;
+      border-bottom: 1px solid var(--border); flex-wrap: wrap; align-items: flex-end;
+    }
+    .event-filter-panel.open { display: flex; }
+    .filter-field { display: flex; flex-direction: column; gap: 4px; }
+    .filter-field span { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .filter-field select, .filter-field input[type=datetime-local] {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border2); border-radius: 6px;
+      padding: 5px 8px; font-family: var(--mono); font-size: 11px;
+    }
+    .filter-field input[type=datetime-local]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+    .filter-reset {
+      font-size: 11px; color: var(--muted); background: transparent;
+      border: none; cursor: pointer; padding: 0; align-self: flex-end; padding-bottom: 6px;
+    }
+    .filter-reset:hover { color: var(--text); }
+
     /* ── Responsive ── */
     @media (max-width: 1024px) {
       .panels { grid-template-columns: 1fr; }
@@ -191,6 +226,72 @@
       .topbar { padding: 12px 14px; }
       .metrics, .sensors-grid { grid-template-columns: 1fr 1fr; }
     }
+    /* Heatmap auf schmalen Screens (iPhone) ohne horizontales Scrollen */
+    @media (max-width: 640px) {
+      .heatmap-body { padding: 12px 8px; }
+      .hm-grid {
+        grid-template-columns: 44px repeat(24, 1fr);
+        gap: 2px; min-width: 0;
+      }
+      .hm-row-label { font-size: 9px; padding-right: 4px; }
+      .hm-col-label { font-size: 7px; }
+      .hm-cell { height: 15px; }
+    }
+
+    /* ── Einstellungs-Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 50;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 12px; width: 100%; max-width: 380px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      font-size: 13px; font-weight: 500;
+    }
+    .modal-close {
+      background: transparent; border: none; color: var(--muted);
+      font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 16px 18px; }
+    .set-section { margin-bottom: 18px; }
+    .set-label {
+      font-size: 10px; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .set-sensor-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .set-sensor-left { display: flex; align-items: center; gap: 8px; }
+    .set-sensor-left input { accent-color: var(--teal); width: 16px; height: 16px; cursor: pointer; }
+    .set-sensor-window { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+    .set-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .set-room { font-size: 10px; font-family: var(--mono); color: var(--muted); }
+    .set-sensor-window select {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border2); border-radius: 6px;
+      padding: 3px 6px; font-family: var(--mono); font-size: 11px;
+    }
+    .set-hint { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+    .set-status { font-size: 12px; min-height: 18px; margin-bottom: 10px; }
+    .set-status.ok  { color: var(--teal-l); }
+    .set-status.err { color: var(--coral-l); }
+    .set-save {
+      width: 100%; padding: 9px; border-radius: 8px; cursor: pointer;
+      background: var(--teal-dim); color: var(--teal-l);
+      border: 1px solid rgba(29,158,117,0.35);
+      font-family: var(--sans); font-size: 13px; transition: all 0.15s;
+    }
+    .set-save:hover { background: rgba(29,158,117,0.25); }
   </style>
 </head>
 <body>
@@ -203,7 +304,15 @@
       <span id="conn-label">Verbinde…</span>
     </div>
   </div>
-  <div class="topbar-right" id="clock"></div>
+  <div class="topbar-right">
+    <button class="icon-btn" id="settings-btn" onclick="openSettings()" aria-label="Push-Benachrichtigungen" title="Push-Benachrichtigungen">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+    <span id="clock"></span>
+  </div>
 </div>
 
 <div class="main">
@@ -211,11 +320,6 @@
     <div class="metric">
       <div class="metric-label">Ereignisse heute</div>
       <div class="metric-value" id="m-today">–</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Aktive Sensoren</div>
-      <div class="metric-value" id="m-active">–</div>
-      <div class="metric-sub" id="m-active-sub"></div>
     </div>
     <div class="metric">
       <div class="metric-label">Aktivster Bereich</div>
@@ -226,31 +330,82 @@
       <div class="metric-value sm" id="m-last">–</div>
       <div class="metric-sub" id="m-last-room"></div>
     </div>
+    <div class="metric">
+      <div class="metric-label">Garage</div>
+      <div class="metric-value sm" id="m-garage">–</div>
+      <div class="metric-sub" id="m-garage-sub"></div>
+    </div>
   </div>
 
   <div class="sensors-grid" id="sensors-grid"></div>
 
-  <div class="panels">
+  <div class="panel" style="margin-bottom:18px;">
+    <div class="panel-header">
+      <span class="panel-title">Aktivitäts-Heatmap</span>
+      <div class="panel-tabs">
+        <button class="tab-btn active" onclick="setHeatRange(this,1)">Heute</button>
+        <button class="tab-btn" onclick="setHeatRange(this,7)">7 Tage</button>
+      </div>
+    </div>
+    <div class="heatmap-body">
+      <div class="hm-grid" id="heatmap"></div>
+    </div>
+  </div>
+
+  <div class="panels full">
     <div class="panel">
       <div class="panel-header">
-        <span class="panel-title">Aktivitäts-Heatmap</span>
-        <div class="panel-tabs">
-          <button class="tab-btn active" onclick="setHeatRange(this,1)">Heute</button>
-          <button class="tab-btn" onclick="setHeatRange(this,7)">7 Tage</button>
-        </div>
+        <span class="panel-title">Garage (Log)</span>
+        <span id="door-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
       </div>
-      <div class="heatmap-body">
-        <div class="hm-grid" id="heatmap"></div>
-      </div>
+      <div class="filter-bar" id="door-filter-bar"></div>
+      <div class="events-list" id="door-events-list"></div>
     </div>
 
     <div class="panel">
       <div class="panel-header">
         <span class="panel-title">Ereignisse</span>
-        <span id="event-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="event-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
+          <button class="tab-btn" id="event-filter-btn" onclick="toggleEventFilter()">Filter</button>
+        </div>
       </div>
-      <div class="filter-bar" id="filter-bar"></div>
+      <div class="event-filter-panel" id="event-filter-panel">
+        <div class="filter-field">
+          <span>Sensor</span>
+          <select id="ef-sensor" onchange="renderEvents()">
+            <option value="all">Alle</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <span>Von</span>
+          <input type="datetime-local" id="ef-from" onchange="renderEvents()">
+        </div>
+        <div class="filter-field">
+          <span>Bis</span>
+          <input type="datetime-local" id="ef-to" onchange="renderEvents()">
+        </div>
+        <button class="filter-reset" onclick="resetEventFilter()">Zurücksetzen</button>
+      </div>
       <div class="events-list" id="events-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <div class="modal-head">
+      <span>Push-Benachrichtigungen</span>
+      <button class="modal-close" onclick="closeSettings()" aria-label="Schließen">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="set-section">
+        <div class="set-label">Sensoren &amp; Zeitraum</div>
+        <div id="notify-sensors"></div>
+        <div class="set-hint">Gleiche Start- und Endzeit = ganztägig. Benachrichtigungen kommen auch bei geschlossenem Dashboard.</div>
+      </div>
+      <div class="set-status" id="set-status"></div>
+      <button class="set-save" onclick="saveSettings()">Speichern</button>
     </div>
   </div>
 </div>
@@ -271,8 +426,7 @@ const HM_STOPS = ['#1e2128','#0a3d28','#0f6e56','#1D9E75','#5DCAA5'];
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-let events = [];          // alle geladenen Events (presence=true)
-let activeFilter = 'all';
+let events = [];
 let heatDays = 1;
 const lastState = {};     // sensor_id → letzter presence-Wert
 
@@ -305,20 +459,25 @@ function buildSensorCards() {
     `).join('');
 }
 
-// ── Filter-Bar aufbauen ──────────────────────────────────────────────────────
-function buildFilterBar() {
-  document.getElementById('filter-bar').innerHTML =
-    `<button class="filter-btn active" onclick="setFilter(this,'all')">Alle</button>` +
+// ── Ereignisse Filter ────────────────────────────────────────────────────────
+function buildEventFilter() {
+  const sel = document.getElementById('ef-sensor');
+  if (!sel) return;
+  sel.innerHTML = `<option value="all">Alle</option>` +
     Object.entries(SENSORS).map(([id, s]) =>
-      `<button class="filter-btn" onclick="setFilter(this,'${id}')"
-         style="border-left:2px solid ${s.hex}">${s.name}</button>`
+      `<option value="${id}">${s.name} (${s.room})</option>`
     ).join('');
 }
 
-function setFilter(btn, id) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  activeFilter = id;
+function toggleEventFilter() {
+  const open = document.getElementById('event-filter-panel').classList.toggle('open');
+  document.getElementById('event-filter-btn').classList.toggle('active', open);
+}
+
+function resetEventFilter() {
+  document.getElementById('ef-sensor').value = 'all';
+  document.getElementById('ef-from').value = '';
+  document.getElementById('ef-to').value = '';
   renderEvents();
 }
 
@@ -384,13 +543,6 @@ function updateMetrics() {
 
   document.getElementById('m-today').textContent = todayEvts.length;
 
-  // Aktivste Sensoren in letzten 10 min
-  const active = Object.keys(SENSORS).filter(id => lastState[parseInt(id)] === true);
-  document.getElementById('m-active').textContent = `${active.length} / ${Object.keys(SENSORS).length}`;
-  document.getElementById('m-active-sub').textContent = active.length
-    ? active.map(id => SENSORS[id].name).join(', ')
-    : 'alle ruhig';
-
   // Aktivster Bereich heute
   const counts = {};
   todayEvts.forEach(e => { counts[e.sensor_id] = (counts[e.sensor_id] || 0) + 1; });
@@ -408,9 +560,15 @@ function updateMetrics() {
 
 // ── Events rendern ────────────────────────────────────────────────────────────
 function renderEvents(newId = null) {
-  const filtered = activeFilter === 'all'
-    ? events
-    : events.filter(e => String(e.sensor_id) === activeFilter);
+  const sensor  = document.getElementById('ef-sensor')?.value || 'all';
+  const fromVal = document.getElementById('ef-from')?.value;
+  const toVal   = document.getElementById('ef-to')?.value;
+  const from = fromVal ? new Date(fromVal) : null;
+  const to   = toVal   ? new Date(toVal)   : null;
+
+  let filtered = sensor === 'all' ? events : events.filter(e => String(e.sensor_id) === sensor);
+  if (from) filtered = filtered.filter(e => new Date(e.created_at) >= from);
+  if (to)   filtered = filtered.filter(e => new Date(e.created_at) <= to);
 
   const shown = filtered.slice(0, 100);
   document.getElementById('event-count').textContent = `${shown.length}`;
@@ -503,46 +661,297 @@ async function loadInitial() {
   renderHeatmap();
 }
 
-// ── Realtime-Subscription ────────────────────────────────────────────────────
-function setupRealtime() {
-  sb.channel('motion_events')
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'motion_events',
-    }, payload => {
-      const e = payload.new;
-      lastState[e.sensor_id] = e.presence;
+// ── Realtime-Subscription mit Auto-Reconnect ─────────────────────────────────
+let rtChannel = null;
+let reconnectTimer = null;
 
-      if (e.presence) {
-        events.unshift(e);
-        if (events.length > 500) events.pop();
-      }
-
-      updateMetrics();
-      updateSensorCards();
-      renderEvents(e.id);
-      renderHeatmap();
-    })
-    .subscribe(status => {
-      const badge = document.getElementById('conn-badge');
-      const label = document.getElementById('conn-label');
-      if (status === 'SUBSCRIBED') {
-        badge.classList.add('live');
-        label.textContent = 'LIVE';
-      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-        badge.classList.remove('live');
-        label.textContent = 'getrennt';
-      } else {
-        label.textContent = 'Verbinde…';
-      }
-    });
+function setConnState(state) {
+  const badge = document.getElementById('conn-badge');
+  const label = document.getElementById('conn-label');
+  if (state === 'live') {
+    badge.classList.add('live');
+    label.textContent = 'LIVE';
+  } else if (state === 'connecting') {
+    badge.classList.remove('live');
+    label.textContent = 'Verbinde…';
+  } else {
+    badge.classList.remove('live');
+    label.textContent = 'getrennt';
+  }
 }
+
+function handleRealtimeInsert(payload) {
+  const e = payload.new;
+  lastState[e.sensor_id] = e.presence;
+
+  if (e.presence && !events.some(x => x.id === e.id)) {
+    events.unshift(e);
+    if (events.length > 500) events.pop();
+  }
+
+  updateMetrics();
+  updateSensorCards();
+  renderEvents(e.id);
+  renderHeatmap();
+}
+
+function setupRealtime() {
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+
+  // Alten Kanal entfernen. Dessen CLOSED-Event darf keinen Reconnect auslösen –
+  // der Status-Callback unten ignoriert daher alles außer dem aktuellen Kanal.
+  const old = rtChannel;
+  rtChannel = null;
+  if (old) sb.removeChannel(old);
+  setConnState('connecting');
+
+  const channel = sb.channel('dashboard_' + Date.now())
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'motion_events' },
+      handleRealtimeInsert)
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'door_events' },
+      handleDoorInsert);
+  rtChannel = channel;
+
+  channel.subscribe(status => {
+    if (rtChannel !== channel) return;   // veralteter Kanal: Status ignorieren
+    if (status === 'SUBSCRIBED') {
+      setConnState('live');
+    } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      setConnState('offline');
+      scheduleReconnect();
+    } else {
+      setConnState('connecting');
+    }
+  });
+}
+
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  reconnectTimer = setTimeout(async () => {
+    reconnectTimer = null;
+    await loadInitial();      // während der Trennung verpasste Events nachladen
+    loadDoorStatus();
+    setupRealtime();
+  }, 3000);
+}
+
+// Erkennt stillschweigend abgebrochene Verbindungen; Polling sichert frische Daten.
+function setupConnectionWatchdog() {
+  // Tote Verbindung erkennen, die kein CLOSED-Event mehr sendet.
+  setInterval(() => {
+    if (document.hidden) return;
+    const state = rtChannel ? rtChannel.state : 'closed';
+    if (state !== 'joined' && state !== 'joining' && !reconnectTimer) {
+      setConnState('offline');
+      scheduleReconnect();
+    }
+  }, 15000);
+
+  // Fallback: auch bei totem Realtime regelmäßig nachladen.
+  setInterval(() => {
+    if (!document.hidden) {
+      loadInitial();
+      loadDoorStatus();
+    }
+  }, 60000);
+
+  // Beim Zurückkehren auf den Tab (z.B. iPhone entsperrt) sofort auffrischen.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    loadInitial();
+    loadDoorStatus();
+    const state = rtChannel ? rtChannel.state : 'closed';
+    if (state !== 'joined' && state !== 'joining') setupRealtime();
+  });
+  window.addEventListener('online', () => { loadInitial(); loadDoorStatus(); setupRealtime(); });
+}
+
+// ── Türzustände ──────────────────────────────────────────────────────────────
+let doorStatus = {};
+let doorEvents = [];
+
+let activeDoorFilter = 'all';
+
+function buildDoorFilterBar() {
+  document.getElementById('door-filter-bar').innerHTML =
+    `<button class="filter-btn active" onclick="setDoorFilter(this,'all')">Alle</button>
+     <button class="filter-btn" onclick="setDoorFilter(this,'open')">open</button>
+     <button class="filter-btn" onclick="setDoorFilter(this,'closed')">closed</button>`;
+}
+
+function setDoorFilter(btn, state) {
+  document.querySelectorAll('#door-filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeDoorFilter = state;
+  renderDoorEventsList();
+}
+
+function handleDoorInsert(payload) {
+  const e = payload.new;
+  if (doorEvents.some(x => x.id === e.id)) return;
+  doorEvents.unshift(e);
+  if (doorEvents.length > 100) doorEvents.pop();
+  doorStatus[e.door_name] = e;
+  renderDoorPanel();
+  renderDoorEventsList();
+}
+
+function renderDoorPanel() {
+  const val = document.getElementById('m-garage');
+  const sub = document.getElementById('m-garage-sub');
+  if (!val) return;
+
+  const g = doorStatus['Garage'];
+  if (!g) {
+    val.textContent = '–';
+    val.style.color = '';
+    sub.textContent = '';
+    return;
+  }
+
+  val.textContent = g.state === 'open' ? 'open' : 'closed';
+  val.style.color = g.state === 'open' ? 'var(--coral-l)' : 'var(--teal-l)';
+  const time = new Date(g.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
+  const d = new Date(g.created_at).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' });
+  sub.textContent = `${d} ${time}`;
+}
+
+function renderDoorEventsList() {
+  const filtered = activeDoorFilter === 'all'
+    ? doorEvents
+    : doorEvents.filter(e => e.state === activeDoorFilter);
+  const shown = filtered.slice(0, 100);
+  document.getElementById('door-count').textContent = `${shown.length}`;
+  document.getElementById('door-events-list').innerHTML = shown.map(e => {
+    const t = new Date(e.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
+    return `
+      <div class="event-row">
+        <div class="ev-dot" style="background:${e.state === 'open' ? '#D85A30' : '#1D9E75'}"></div>
+        <span class="ev-time">${t}</span>
+        <span class="ev-name">${e.door_name}</span>
+        <span class="ev-room">${e.state === 'open' ? 'open' : 'closed'}</span>
+      </div>`;
+  }).join('') || `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Keine Einträge</div>`;
+}
+
+async function loadDoorStatus() {
+  const { data: evts } = await sb
+    .from('door_events')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (evts) {
+    doorEvents = evts;
+    // Aktuellen Status pro Tür aus dem neuesten Eintrag ableiten
+    doorStatus = {};
+    evts.forEach(e => {
+      if (!doorStatus[e.door_name]) doorStatus[e.door_name] = e;
+    });
+    renderDoorPanel();
+    renderDoorEventsList();
+  }
+}
+
+// ── Push-Benachrichtigungen (Einstellungen) ──────────────────────────────────
+let notifySettings = { sensor_config: {} };
+
+function hourOptions(selected) {
+  return Array.from({length: 24}, (_, h) =>
+    `<option value="${h}" ${h === selected ? 'selected' : ''}>${String(h).padStart(2,'0')}:00</option>`
+  ).join('');
+}
+
+function renderNotifySensors() {
+  const sc = notifySettings.sensor_config || {};
+  document.getElementById('notify-sensors').innerHTML =
+    Object.entries(SENSORS).map(([id, s]) => {
+      const cfg = sc[id] || { enabled: false, window_start: 22, window_end: 6 };
+      return `
+        <div class="set-sensor-row">
+          <div class="set-sensor-left">
+            <input type="checkbox" id="snsr-${id}" value="${id}" ${cfg.enabled ? 'checked' : ''}>
+            <span class="set-dot" style="background:${s.hex}"></span>
+            <label for="snsr-${id}" style="font-size:13px;cursor:pointer">${s.name}</label>
+            <span class="set-room">${s.room}</span>
+          </div>
+          <div class="set-sensor-window">
+            von <select id="sw-s-${id}">${hourOptions(cfg.window_start)}</select>
+            bis <select id="sw-e-${id}">${hourOptions(cfg.window_end)}</select>
+          </div>
+        </div>`;
+    }).join('');
+}
+
+function updateArmedBadge() {
+  const armed = Object.values(notifySettings.sensor_config || {}).some(v => v.enabled);
+  document.getElementById('settings-btn').classList.toggle('armed', armed);
+}
+
+async function loadNotifySettings() {
+  const { data } = await sb.from('notify_settings').select('*').eq('id', 1).maybeSingle();
+  if (data) {
+    notifySettings = { sensor_config: data.sensor_config || {} };
+  }
+  updateArmedBadge();
+}
+
+function openSettings() {
+  renderNotifySensors();
+  const status = document.getElementById('set-status');
+  status.textContent = ''; status.className = 'set-status';
+  document.getElementById('settings-modal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+
+async function saveSettings() {
+  const sensor_config = {};
+  Object.keys(SENSORS).forEach(id => {
+    const cb  = document.getElementById(`snsr-${id}`);
+    const ws  = parseInt(document.getElementById(`sw-s-${id}`).value);
+    const we  = parseInt(document.getElementById(`sw-e-${id}`).value);
+    sensor_config[id] = { enabled: cb ? cb.checked : false, window_start: ws, window_end: we };
+  });
+
+  const status = document.getElementById('set-status');
+  status.className = 'set-status';
+  status.textContent = 'Speichere…';
+
+  const { error } = await sb.from('notify_settings')
+    .update({ sensor_config, updated_at: new Date().toISOString() })
+    .eq('id', 1);
+
+  if (error) {
+    status.classList.add('err');
+    status.textContent = 'Fehler: ' + error.message;
+  } else {
+    notifySettings = { sensor_config };
+    updateArmedBadge();
+    status.classList.add('ok');
+    status.textContent = 'Gespeichert.';
+  }
+}
+
+// ── iOS: Zoom unterbinden (Pinch & Doppeltipp) ───────────────────────────────
+['gesturestart', 'gesturechange', 'gestureend'].forEach(evt =>
+  document.addEventListener(evt, e => e.preventDefault())
+);
+document.addEventListener('touchmove', e => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 buildSensorCards();
-buildFilterBar();
-loadInitial().then(() => setupRealtime());
+buildEventFilter();
+buildDoorFilterBar();
+loadNotifySettings();
+loadDoorStatus();
+loadInitial().then(() => { setupRealtime(); setupConnectionWatchdog(); });
 </script>
 </body>
 </html>

@@ -1,0 +1,5 @@
+project_id = "ebbuvdzgstrhrcsbrlez"
+
+# Wird per Database Webhook ausgelöst, kein JWT erforderlich.
+[functions.motion-pushover]
+verify_jwt = false
