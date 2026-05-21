@@ -49,12 +49,13 @@ Deno.serve(async (req) => {
     }
 
     const sensorId = Number(row.sensor_id);
-    if (!cfg.enabled_sensors?.includes(sensorId)) {
+    const sensorCfg = (cfg.sensor_config ?? {})[String(sensorId)];
+    if (!sensorCfg?.enabled) {
       return new Response("skip: Sensor deaktiviert", { status: 200 });
     }
 
     const when = new Date(row.created_at ?? Date.now());
-    if (!inWindow(viennaHour(when), cfg.window_start, cfg.window_end)) {
+    if (!inWindow(viennaHour(when), sensorCfg.window_start, sensorCfg.window_end)) {
       return new Response("skip: außerhalb des Zeitraums", { status: 200 });
     }
 

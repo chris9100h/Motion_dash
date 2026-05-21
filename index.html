@@ -246,24 +246,22 @@
       font-size: 10px; color: var(--muted); text-transform: uppercase;
       letter-spacing: 0.08em; margin-bottom: 10px;
     }
-    .set-check {
-      display: flex; align-items: center; gap: 8px;
-      padding: 7px 0; font-size: 13px; cursor: pointer;
+    .set-sensor-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
     }
-    .set-check input { accent-color: var(--teal); width: 16px; height: 16px; }
+    .set-sensor-left { display: flex; align-items: center; gap: 8px; }
+    .set-sensor-left input { accent-color: var(--teal); width: 16px; height: 16px; cursor: pointer; }
+    .set-sensor-window { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
     .set-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .set-room {
-      font-size: 10px; font-family: var(--mono); color: var(--muted);
-      margin-left: auto;
-    }
-    .set-row { display: flex; gap: 16px; }
-    .set-row label { font-size: 13px; display: flex; align-items: center; gap: 6px; }
-    .set-row select {
+    .set-room { font-size: 10px; font-family: var(--mono); color: var(--muted); }
+    .set-sensor-window select {
       background: var(--surface2); color: var(--text);
       border: 1px solid var(--border2); border-radius: 6px;
-      padding: 5px 8px; font-family: var(--mono); font-size: 12px;
+      padding: 3px 6px; font-family: var(--mono); font-size: 11px;
     }
-    .set-hint { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+    .set-hint { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
     .set-status { font-size: 12px; min-height: 18px; margin-bottom: 10px; }
     .set-status.ok  { color: var(--teal-l); }
     .set-status.err { color: var(--coral-l); }
@@ -363,16 +361,9 @@
     </div>
     <div class="modal-body">
       <div class="set-section">
-        <div class="set-label">Sensoren, die benachrichtigen</div>
+        <div class="set-label">Sensoren &amp; Zeitraum</div>
         <div id="notify-sensors"></div>
-      </div>
-      <div class="set-section">
-        <div class="set-label">Aktiv-Zeitraum</div>
-        <div class="set-row">
-          <label>von <select id="win-start"></select></label>
-          <label>bis <select id="win-end"></select></label>
-        </div>
-        <div class="set-hint">In diesem Zeitraum wird bei jeder Bewegung der gewählten Sensoren eine Pushover-Nachricht gesendet – auch wenn das Dashboard geschlossen ist. Gleiche Start- und Endzeit = ganztägig.</div>
+        <div class="set-hint">Gleiche Start- und Endzeit = ganztägig. Benachrichtigungen kommen auch bei geschlossenem Dashboard.</div>
       </div>
       <div class="set-status" id="set-status"></div>
       <button class="set-save" onclick="saveSettings()">Speichern</button>
@@ -816,46 +807,50 @@ async function loadDoorStatus() {
 }
 
 // ── Push-Benachrichtigungen (Einstellungen) ──────────────────────────────────
-let notifySettings = { enabled_sensors: [], window_start: 22, window_end: 6 };
+let notifySettings = { sensor_config: {} };
 
-function renderNotifySensors() {
-  document.getElementById('notify-sensors').innerHTML =
-    Object.entries(SENSORS).map(([id, s]) => `
-      <label class="set-check">
-        <input type="checkbox" value="${id}" ${notifySettings.enabled_sensors.includes(parseInt(id)) ? 'checked' : ''}>
-        <span class="set-dot" style="background:${s.hex}"></span>
-        <span>${s.name}</span>
-        <span class="set-room">${s.room}</span>
-      </label>`).join('');
-}
-
-function fillHourSelect(el, value) {
-  el.innerHTML = Array.from({ length: 24 }, (_, h) =>
-    `<option value="${h}" ${h === value ? 'selected' : ''}>${String(h).padStart(2,'0')}:00</option>`
+function hourOptions(selected) {
+  return Array.from({length: 24}, (_, h) =>
+    `<option value="${h}" ${h === selected ? 'selected' : ''}>${String(h).padStart(2,'0')}:00</option>`
   ).join('');
 }
 
+function renderNotifySensors() {
+  const sc = notifySettings.sensor_config || {};
+  document.getElementById('notify-sensors').innerHTML =
+    Object.entries(SENSORS).map(([id, s]) => {
+      const cfg = sc[id] || { enabled: false, window_start: 22, window_end: 6 };
+      return `
+        <div class="set-sensor-row">
+          <div class="set-sensor-left">
+            <input type="checkbox" id="snsr-${id}" value="${id}" ${cfg.enabled ? 'checked' : ''}>
+            <span class="set-dot" style="background:${s.hex}"></span>
+            <label for="snsr-${id}" style="font-size:13px;cursor:pointer">${s.name}</label>
+            <span class="set-room">${s.room}</span>
+          </div>
+          <div class="set-sensor-window">
+            von <select id="sw-s-${id}">${hourOptions(cfg.window_start)}</select>
+            bis <select id="sw-e-${id}">${hourOptions(cfg.window_end)}</select>
+          </div>
+        </div>`;
+    }).join('');
+}
+
 function updateArmedBadge() {
-  document.getElementById('settings-btn')
-    .classList.toggle('armed', notifySettings.enabled_sensors.length > 0);
+  const armed = Object.values(notifySettings.sensor_config || {}).some(v => v.enabled);
+  document.getElementById('settings-btn').classList.toggle('armed', armed);
 }
 
 async function loadNotifySettings() {
   const { data } = await sb.from('notify_settings').select('*').eq('id', 1).maybeSingle();
   if (data) {
-    notifySettings = {
-      enabled_sensors: data.enabled_sensors || [],
-      window_start: data.window_start ?? 22,
-      window_end: data.window_end ?? 6,
-    };
+    notifySettings = { sensor_config: data.sensor_config || {} };
   }
   updateArmedBadge();
 }
 
 function openSettings() {
   renderNotifySensors();
-  fillHourSelect(document.getElementById('win-start'), notifySettings.window_start);
-  fillHourSelect(document.getElementById('win-end'), notifySettings.window_end);
   const status = document.getElementById('set-status');
   status.textContent = ''; status.className = 'set-status';
   document.getElementById('settings-modal').classList.add('open');
@@ -866,28 +861,27 @@ function closeSettings() {
 }
 
 async function saveSettings() {
-  const sensors = [...document.querySelectorAll('#notify-sensors input:checked')]
-    .map(i => parseInt(i.value));
-  const ws = parseInt(document.getElementById('win-start').value);
-  const we = parseInt(document.getElementById('win-end').value);
+  const sensor_config = {};
+  Object.keys(SENSORS).forEach(id => {
+    const cb  = document.getElementById(`snsr-${id}`);
+    const ws  = parseInt(document.getElementById(`sw-s-${id}`).value);
+    const we  = parseInt(document.getElementById(`sw-e-${id}`).value);
+    sensor_config[id] = { enabled: cb ? cb.checked : false, window_start: ws, window_end: we };
+  });
+
   const status = document.getElementById('set-status');
   status.className = 'set-status';
   status.textContent = 'Speichere…';
 
   const { error } = await sb.from('notify_settings')
-    .update({
-      enabled_sensors: sensors,
-      window_start: ws,
-      window_end: we,
-      updated_at: new Date().toISOString(),
-    })
+    .update({ sensor_config, updated_at: new Date().toISOString() })
     .eq('id', 1);
 
   if (error) {
     status.classList.add('err');
     status.textContent = 'Fehler: ' + error.message;
   } else {
-    notifySettings = { enabled_sensors: sensors, window_start: ws, window_end: we };
+    notifySettings = { sensor_config };
     updateArmedBadge();
     status.classList.add('ok');
     status.textContent = 'Gespeichert.';
