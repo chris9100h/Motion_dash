@@ -340,6 +340,7 @@
         <span class="panel-title">Garage (Log)</span>
         <span id="door-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
       </div>
+      <div class="filter-bar" id="door-filter-bar"></div>
       <div class="events-list" id="door-events-list"></div>
     </div>
 
@@ -731,11 +732,27 @@ function setupConnectionWatchdog() {
 let doorStatus = {};
 let doorEvents = [];
 
+let activeDoorFilter = 'all';
+
+function buildDoorFilterBar() {
+  document.getElementById('door-filter-bar').innerHTML =
+    `<button class="filter-btn active" onclick="setDoorFilter(this,'all')">Alle</button>
+     <button class="filter-btn" onclick="setDoorFilter(this,'open')">open</button>
+     <button class="filter-btn" onclick="setDoorFilter(this,'closed')">closed</button>`;
+}
+
+function setDoorFilter(btn, state) {
+  document.querySelectorAll('#door-filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeDoorFilter = state;
+  renderDoorEventsList();
+}
+
 function handleDoorInsert(payload) {
   const e = payload.new;
   if (doorEvents.some(x => x.id === e.id)) return;
   doorEvents.unshift(e);
-  if (doorEvents.length > 50) doorEvents.pop();
+  if (doorEvents.length > 100) doorEvents.pop();
   doorStatus[e.door_name] = e;
   renderDoorPanel();
   renderDoorEventsList();
@@ -762,7 +779,10 @@ function renderDoorPanel() {
 }
 
 function renderDoorEventsList() {
-  const shown = doorEvents.slice(0, 10);
+  const filtered = activeDoorFilter === 'all'
+    ? doorEvents
+    : doorEvents.filter(e => e.state === activeDoorFilter);
+  const shown = filtered.slice(0, 100);
   document.getElementById('door-count').textContent = `${shown.length}`;
   document.getElementById('door-events-list').innerHTML = shown.map(e => {
     const t = new Date(e.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
@@ -885,6 +905,7 @@ document.addEventListener('touchmove', e => {
 // ── Start ─────────────────────────────────────────────────────────────────────
 buildSensorCards();
 buildFilterBar();
+buildDoorFilterBar();
 loadNotifySettings();
 loadDoorStatus();
 loadInitial().then(() => { setupRealtime(); setupConnectionWatchdog(); });
