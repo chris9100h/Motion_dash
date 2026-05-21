@@ -617,40 +617,92 @@ async function loadInitial() {
   renderHeatmap();
 }
 
-// ── Realtime-Subscription ────────────────────────────────────────────────────
+// ── Realtime-Subscription mit Auto-Reconnect ─────────────────────────────────
+let rtChannel = null;
+let reconnectTimer = null;
+
+function setConnState(state) {
+  const badge = document.getElementById('conn-badge');
+  const label = document.getElementById('conn-label');
+  if (state === 'live') {
+    badge.classList.add('live');
+    label.textContent = 'LIVE';
+  } else if (state === 'connecting') {
+    badge.classList.remove('live');
+    label.textContent = 'Verbinde…';
+  } else {
+    badge.classList.remove('live');
+    label.textContent = 'getrennt';
+  }
+}
+
+function handleRealtimeInsert(payload) {
+  const e = payload.new;
+  lastState[e.sensor_id] = e.presence;
+
+  if (e.presence && !events.some(x => x.id === e.id)) {
+    events.unshift(e);
+    if (events.length > 500) events.pop();
+  }
+
+  updateMetrics();
+  updateSensorCards();
+  renderEvents(e.id);
+  renderHeatmap();
+}
+
 function setupRealtime() {
-  sb.channel('motion_events')
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'motion_events',
-    }, payload => {
-      const e = payload.new;
-      lastState[e.sensor_id] = e.presence;
+  if (rtChannel) { sb.removeChannel(rtChannel); rtChannel = null; }
+  setConnState('connecting');
 
-      if (e.presence) {
-        events.unshift(e);
-        if (events.length > 500) events.pop();
-      }
-
-      updateMetrics();
-      updateSensorCards();
-      renderEvents(e.id);
-      renderHeatmap();
-    })
+  rtChannel = sb.channel('motion_events_' + Date.now())
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'motion_events' },
+      handleRealtimeInsert)
     .subscribe(status => {
-      const badge = document.getElementById('conn-badge');
-      const label = document.getElementById('conn-label');
       if (status === 'SUBSCRIBED') {
-        badge.classList.add('live');
-        label.textContent = 'LIVE';
-      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-        badge.classList.remove('live');
-        label.textContent = 'getrennt';
+        setConnState('live');
+      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        setConnState('offline');
+        scheduleReconnect();
       } else {
-        label.textContent = 'Verbinde…';
+        setConnState('connecting');
       }
     });
+}
+
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  reconnectTimer = setTimeout(async () => {
+    reconnectTimer = null;
+    await loadInitial();      // während der Trennung verpasste Events nachladen
+    setupRealtime();
+  }, 3000);
+}
+
+// Erkennt stillschweigend abgebrochene Verbindungen; Polling sichert frische Daten.
+function setupConnectionWatchdog() {
+  // Tote Verbindung erkennen, die kein CLOSED-Event mehr sendet.
+  setInterval(() => {
+    if (document.hidden) return;
+    const state = rtChannel ? rtChannel.state : 'closed';
+    if (state !== 'joined' && state !== 'joining' && !reconnectTimer) {
+      setConnState('offline');
+      scheduleReconnect();
+    }
+  }, 15000);
+
+  // Fallback: auch bei totem Realtime regelmäßig nachladen.
+  setInterval(() => { if (!document.hidden) loadInitial(); }, 60000);
+
+  // Beim Zurückkehren auf den Tab (z.B. iPhone entsperrt) sofort auffrischen.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    loadInitial();
+    const state = rtChannel ? rtChannel.state : 'closed';
+    if (state !== 'joined' && state !== 'joining') setupRealtime();
+  });
+  window.addEventListener('online', () => { loadInitial(); setupRealtime(); });
 }
 
 // ── Push-Benachrichtigungen (Einstellungen) ──────────────────────────────────
@@ -744,7 +796,7 @@ document.addEventListener('touchmove', e => {
 buildSensorCards();
 buildFilterBar();
 loadNotifySettings();
-loadInitial().then(() => setupRealtime());
+loadInitial().then(() => { setupRealtime(); setupConnectionWatchdog(); });
 </script>
 </body>
 </html>
