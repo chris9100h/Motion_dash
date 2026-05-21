@@ -349,12 +349,23 @@
 
   <div id="doors-panel" style="margin-bottom:18px"></div>
 
-  <div class="panel" style="margin-bottom:18px">
-    <div class="panel-header">
-      <span class="panel-title">Türzustände</span>
-      <span id="door-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
+  <div class="panels">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Türzustände (Log)</span>
+        <span id="door-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
+      </div>
+      <div class="events-list" id="door-events-list"></div>
     </div>
-    <div class="events-list" id="door-events-list" style="max-height:300px"></div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Türen (aktuell)</span>
+      </div>
+      <div style="padding:16px 18px">
+        <div id="doors-status-detail"></div>
+      </div>
+    </div>
   </div>
 
   <div class="panels">
@@ -763,24 +774,38 @@ let doorStatus = {};
 let doorEvents = [];
 
 function renderDoorPanel() {
-  const panel = document.getElementById('doors-panel');
+  const topPanel = document.getElementById('doors-panel');
+  const detailPanel = document.getElementById('doors-status-detail');
+
   if (Object.keys(doorStatus).length === 0) {
-    panel.innerHTML = '';
+    topPanel.innerHTML = '';
+    detailPanel.innerHTML = '';
     return;
   }
 
   let html = '<div class="door-panel">';
+  let detailHtml = '';
   Object.entries(doorStatus).forEach(([name, data]) => {
     const time = new Date(data.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
+    const d = new Date(data.created_at).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' });
     html += `
       <div class="door-card ${data.state}">
         <div class="door-name">${name}</div>
         <div class="door-state ${data.state}">${data.state === 'open' ? 'Offen' : 'Geschlossen'}</div>
         <div class="door-time">${time}</div>
       </div>`;
+    detailHtml += `
+      <div style="padding:10px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+        <div>
+          <div style="font-size:13px; font-weight:500">${name}</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:2px">${d} ${time}</div>
+        </div>
+        <span class="door-state ${data.state}" style="font-size:11px">${data.state === 'open' ? 'Offen' : 'Geschlossen'}</span>
+      </div>`;
   });
   html += '</div>';
-  panel.innerHTML = html;
+  topPanel.innerHTML = html;
+  detailPanel.innerHTML = detailHtml;
 }
 
 function renderDoorEventsList() {
