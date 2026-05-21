@@ -24,10 +24,11 @@ SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 TIME_DISPLAY=$(date '+%H:%M:%S')
 
-# Supabase: Event eintragen
-curl -s -X POST "$SUPABASE_URL/rest/v1/door_events" \
+# Supabase: Status aktualisieren (upsert)
+curl -s -X POST "$SUPABASE_URL/rest/v1/door_status?on_conflict=door_name" \
   -H "Content-Type: application/json" \
   -H "apikey: $SUPABASE_KEY" \
+  -H "Prefer: resolution=merge-duplicates" \
   -d "{\"door_name\":\"$DOOR_NAME\",\"state\":\"$STATE\",\"created_at\":\"$TIMESTAMP\"}" \
   > /dev/null 2>&1
 
