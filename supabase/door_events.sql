@@ -8,7 +8,7 @@ create table if not exists public.door_events (
 );
 
 -- Nur die neueste Änderung pro Tür
-create view if not exists public.door_status as
+create or replace view public.door_status as
   select distinct on (door_name) door_name, state, created_at
   from public.door_events
   order by door_name, created_at desc;
