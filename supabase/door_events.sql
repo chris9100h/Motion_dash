@@ -1,4 +1,9 @@
 -- Garage-Türzustände — History aller Events
+
+-- Alte Tabelle/View entfernen falls vorhanden
+drop table if exists public.door_status;
+drop view if exists public.door_status;
+
 create table if not exists public.door_events (
   id            bigserial primary key,
   door_name     text              not null,
