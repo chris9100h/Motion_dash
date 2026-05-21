@@ -805,23 +805,22 @@ function renderDoorPanel() {
           <div style="font-size:13px; font-weight:500">${name}</div>
           <div style="font-size:11px; color:var(--muted); margin-top:2px">${d} ${time}</div>
         </div>
-        <span class="door-state ${data.state}" style="font-size:11px">${data.state === 'open' ? 'Offen' : 'Geschlossen'}</span>
+        <span class="door-state ${data.state}" style="font-size:11px">${data.state === 'open' ? 'open' : 'closed'}</span>
       </div>`;
   }).join('');
 }
 
 function renderDoorEventsList() {
-  const shown = doorEvents.slice(0, 50);
+  const shown = doorEvents.slice(0, 10);
   document.getElementById('door-count').textContent = `${shown.length}`;
   document.getElementById('door-events-list').innerHTML = shown.map(e => {
-    const t = new Date(e.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-    const d = new Date(e.created_at).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' });
+    const t = new Date(e.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
     return `
       <div class="event-row">
         <div class="ev-dot" style="background:${e.state === 'open' ? '#D85A30' : '#1D9E75'}"></div>
         <span class="ev-time">${t}</span>
         <span class="ev-name">${e.door_name}</span>
-        <span class="ev-room">${e.state === 'open' ? 'Offen' : 'Geschlossen'}</span>
+        <span class="ev-room">${e.state === 'open' ? 'open' : 'closed'}</span>
       </div>`;
   }).join('') || `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Keine Einträge</div>`;
 }
