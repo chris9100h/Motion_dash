@@ -272,6 +272,34 @@
       font-family: var(--sans); font-size: 13px; transition: all 0.15s;
     }
     .set-save:hover { background: rgba(29,158,117,0.25); }
+
+    /* ── Door Status ── */
+    .door-panel {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .door-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; position: relative;
+      overflow: hidden;
+    }
+    .door-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: transparent; transition: background 0.4s;
+    }
+    .door-card.open { border-color: var(--coral); }
+    .door-card.open::before { background: var(--coral); }
+    .door-card.closed { border-color: var(--teal); }
+    .door-card.closed::before { background: var(--teal); }
+
+    .door-name { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
+    .door-state {
+      font-family: var(--mono); font-size: 12px; padding: 4px 8px;
+      border-radius: 6px; display: inline-block; white-space: nowrap;
+    }
+    .door-state.open { background: var(--coral-dim); color: var(--coral-l); }
+    .door-state.closed { background: var(--teal-dim); color: var(--teal-l); }
+    .door-time { font-size: 10px; color: var(--muted); margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -318,6 +346,8 @@
   </div>
 
   <div class="sensors-grid" id="sensors-grid"></div>
+
+  <div id="doors-panel" style="margin-bottom:18px"></div>
 
   <div class="panels">
     <div class="panel">
@@ -702,16 +732,55 @@ function setupConnectionWatchdog() {
   }, 15000);
 
   // Fallback: auch bei totem Realtime regelmäßig nachladen.
-  setInterval(() => { if (!document.hidden) loadInitial(); }, 60000);
+  setInterval(() => {
+    if (!document.hidden) {
+      loadInitial();
+      loadDoorStatus();
+    }
+  }, 60000);
 
   // Beim Zurückkehren auf den Tab (z.B. iPhone entsperrt) sofort auffrischen.
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     loadInitial();
+    loadDoorStatus();
     const state = rtChannel ? rtChannel.state : 'closed';
     if (state !== 'joined' && state !== 'joining') setupRealtime();
   });
-  window.addEventListener('online', () => { loadInitial(); setupRealtime(); });
+  window.addEventListener('online', () => { loadInitial(); loadDoorStatus(); setupRealtime(); });
+}
+
+// ── Türzustände ──────────────────────────────────────────────────────────────
+let doorStatus = {};
+
+function renderDoorPanel() {
+  const panel = document.getElementById('doors-panel');
+  if (Object.keys(doorStatus).length === 0) {
+    panel.innerHTML = '';
+    return;
+  }
+
+  let html = '<div class="door-panel">';
+  Object.entries(doorStatus).forEach(([name, data]) => {
+    const time = new Date(data.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
+    html += `
+      <div class="door-card ${data.state}">
+        <div class="door-name">${name}</div>
+        <div class="door-state ${data.state}">${data.state === 'open' ? 'Offen' : 'Geschlossen'}</div>
+        <div class="door-time">${time}</div>
+      </div>`;
+  });
+  html += '</div>';
+  panel.innerHTML = html;
+}
+
+async function loadDoorStatus() {
+  const { data } = await sb.from('door_status').select('*');
+  if (data) {
+    doorStatus = {};
+    data.forEach(row => { doorStatus[row.door_name] = row; });
+    renderDoorPanel();
+  }
 }
 
 // ── Push-Benachrichtigungen (Einstellungen) ──────────────────────────────────
@@ -805,6 +874,14 @@ document.addEventListener('touchmove', e => {
 buildSensorCards();
 buildFilterBar();
 loadNotifySettings();
+loadDoorStatus();
+
+// Realtime für door_events: neue Türeinträge sofort anzeigen
+sb.channel('door_changes').on('postgres_changes',
+  { event: 'INSERT', schema: 'public', table: 'door_events' },
+  () => { loadDoorStatus(); }
+).subscribe();
+
 loadInitial().then(() => { setupRealtime(); setupConnectionWatchdog(); });
 </script>
 </body>
