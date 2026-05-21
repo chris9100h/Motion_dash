@@ -710,10 +710,13 @@ function setupRealtime() {
   if (old) sb.removeChannel(old);
   setConnState('connecting');
 
-  const channel = sb.channel('motion_events_' + Date.now())
+  const channel = sb.channel('dashboard_' + Date.now())
     .on('postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'motion_events' },
-      handleRealtimeInsert);
+      handleRealtimeInsert)
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'door_events' },
+      handleDoorInsert);
   rtChannel = channel;
 
   channel.subscribe(status => {
@@ -734,6 +737,7 @@ function scheduleReconnect() {
   reconnectTimer = setTimeout(async () => {
     reconnectTimer = null;
     await loadInitial();      // während der Trennung verpasste Events nachladen
+    loadDoorStatus();
     setupRealtime();
   }, 3000);
 }
@@ -772,6 +776,16 @@ function setupConnectionWatchdog() {
 // ── Türzustände ──────────────────────────────────────────────────────────────
 let doorStatus = {};
 let doorEvents = [];
+
+function handleDoorInsert(payload) {
+  const e = payload.new;
+  if (doorEvents.some(x => x.id === e.id)) return;
+  doorEvents.unshift(e);
+  if (doorEvents.length > 50) doorEvents.pop();
+  doorStatus[e.door_name] = e;
+  renderDoorPanel();
+  renderDoorEventsList();
+}
 
 function renderDoorPanel() {
   const detailPanel = document.getElementById('doors-status-detail');
@@ -923,20 +937,6 @@ buildSensorCards();
 buildFilterBar();
 loadNotifySettings();
 loadDoorStatus();
-
-// Realtime für door_events: neue Türeinträge sofort anzeigen
-sb.channel('door_changes').on('postgres_changes',
-  { event: 'INSERT', schema: 'public', table: 'door_events' },
-  payload => {
-    const e = payload.new;
-    doorEvents.unshift(e);
-    if (doorEvents.length > 50) doorEvents.pop();
-    doorStatus[e.door_name] = e;
-    renderDoorPanel();
-    renderDoorEventsList();
-  }
-).subscribe();
-
 loadInitial().then(() => { setupRealtime(); setupConnectionWatchdog(); });
 </script>
 </body>
