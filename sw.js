@@ -1,14 +1,15 @@
-const CACHE    = 'motion-v1';
-const SHELL    = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',
-];
+const CACHE = 'motion-v2';
 
 self.addEventListener('install', e => {
+  const base = self.registration.scope;
+  const SHELL = [
+    base,
+    base + 'index.html',
+    base + 'manifest.json',
+    base + 'icons/icon-192.png',
+    base + 'icons/icon-512.png',
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',
+  ];
   e.waitUntil(
     caches.open(CACHE).then(c => c.addAll(SHELL))
   );
