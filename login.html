@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Motion · Sign In</title>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#120d0a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:             #08070a;
+      --bg-deep:        #030203;
+      --surface:        #0f0d10;
+      --surface2:       #181519;
+      --surface3:       #221d22;
+      --line:           rgba(200, 122, 58, 0.08);
+      --line2:          rgba(200, 122, 58, 0.14);
+      --line3:          rgba(200, 122, 58, 0.26);
+      --muted:          rgba(255,255,255,0.28);
+      --muted2:         rgba(255,255,255,0.12);
+      --text-dim:       rgba(255,255,255,0.55);
+      --text:           rgba(255,255,255,0.88);
+      --copper:         #c87a3a;
+      --copper-bright:  #f0ad6e;
+      --copper-dim:     rgba(200, 122, 58, 0.12);
+      --ok:             #9cb070;
+      --alert:          #dc5a2e;
+      --mono:           'IBM Plex Mono', monospace;
+      --sans:           'IBM Plex Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* ── Card ── */
+    .login-card {
+      position: relative;
+      width: 100%;
+      max-width: 340px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      padding: 48px 36px 36px;
+    }
+
+    /* Corner marks identical to .cell */
+    .login-card::before,
+    .login-card::after {
+      content: "";
+      position: absolute;
+      width: 7px; height: 7px;
+      border-color: var(--line3);
+      pointer-events: none;
+    }
+    .login-card::before {
+      top: -1px; left: -1px;
+      border-top: 1px solid var(--line3);
+      border-left: 1px solid var(--line3);
+    }
+    .login-card::after {
+      bottom: -1px; right: -1px;
+      border-bottom: 1px solid var(--line3);
+      border-right: 1px solid var(--line3);
+    }
+
+    /* ── Logo ── */
+    .login-logo {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.24em;
+      color: var(--copper-bright);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .login-logo .slash { color: var(--muted); font-weight: 300; }
+
+    .login-sub {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.20em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+
+    /* ── Form ── */
+    .field-group {
+      margin-bottom: 16px;
+    }
+    .field-group label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-bottom: 7px;
+    }
+    .field-group input {
+      display: block;
+      width: 100%;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--line2);
+      padding: 10px 12px;
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    .field-group input:focus { border-color: var(--line3); }
+    .field-group input::placeholder { color: var(--muted2); }
+
+    .error-msg {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--alert);
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      min-height: 18px;
+      margin-bottom: 12px;
+    }
+
+    .submit-btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      cursor: pointer;
+      background: var(--copper-dim);
+      color: var(--copper-bright);
+      border: 1px solid var(--line3);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .submit-btn:hover:not(:disabled) {
+      background: rgba(200, 122, 58, 0.22);
+      box-shadow: 0 0 18px rgba(240, 173, 110, 0.18);
+    }
+    .submit-btn:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    /* ── Coord label ── */
+    .card-coord {
+      position: absolute;
+      top: 12px; left: 14px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-card">
+  <span class="card-coord">A.00</span>
+  <div class="login-logo">HUE<span class="slash">/</span>MOTION</div>
+  <div class="login-sub">Sign in to continue</div>
+
+  <form id="login-form" autocomplete="on">
+    <div class="field-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email"
+             autocomplete="email" required autofocus>
+    </div>
+    <div class="field-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password"
+             autocomplete="current-password" required>
+    </div>
+    <div class="error-msg" id="login-error"></div>
+    <button type="submit" class="submit-btn" id="submit-btn">Sign In</button>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL  = 'https://ebbuvdzgstrhrcsbrlez.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViYnV2ZHpnc3RyaHJjc2JybGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMjc4ODAsImV4cCI6MjA5MTYwMzg4MH0.RyTzHiqV1TPSZtM7lgenBJbUCTjj5fCUhoWauifjlIE';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// Already logged in → go straight to dashboard
+sb.auth.getSession().then(({ data }) => {
+  if (data.session) window.location.replace('index.html');
+});
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  const err = document.getElementById('login-error');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+  err.textContent = '';
+
+  const { error } = await sb.auth.signInWithPassword({
+    email:    document.getElementById('email').value.trim(),
+    password: document.getElementById('password').value,
+  });
+
+  if (error) {
+    err.textContent = error.message;
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+  } else {
+    window.location.replace('index.html');
+  }
+});
+</script>
+</body>
+</html>

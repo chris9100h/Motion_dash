@@ -1259,6 +1259,22 @@
       background: rgba(200, 122, 58, 0.22);
       box-shadow: 0 0 18px rgba(240, 173, 110, 0.18);
     }
+    .set-key-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--line2);
+      padding: 10px 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-top: 8px;
+    }
+    .set-key-input:focus { border-color: var(--line3); }
+    .set-key-input::placeholder { color: var(--muted2); }
   </style>
 </head>
 <body>
@@ -1280,6 +1296,13 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+      <button class="icon-btn" onclick="logout()" aria-label="Sign out" title="Sign out">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
         </svg>
       </button>
     </div>
@@ -1433,6 +1456,12 @@
     </div>
     <div class="modal-body">
       <div class="set-section">
+        <div class="set-label">Pushover User Key</div>
+        <input type="text" id="pushover-key" class="set-key-input"
+               placeholder="u·················" autocomplete="off" spellcheck="false">
+        <div class="set-hint">Your personal key from pushover.net — not the app token.</div>
+      </div>
+      <div class="set-section">
         <div class="set-label">Sensors &amp; Time Window</div>
         <div id="notify-sensors"></div>
         <div class="set-hint">Same start and end time = all day. Notifications arrive even when the dashboard is closed.</div>
@@ -1459,6 +1488,7 @@ const HM_STOPS = ['#181519', '#3a2515', '#7a3f15', '#B5731F', '#F0AD6E'];
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
+let currentUser = null;
 let events = [];
 let heatDays = 1;
 const lastState = {};
@@ -2023,18 +2053,30 @@ function updateArmedBadge() {
 }
 
 async function loadNotifySettings() {
-  const { data } = await sb.from('notify_settings').select('*').eq('id', 1).maybeSingle();
+  if (!currentUser) return;
+  const { data } = await sb.from('notify_settings')
+    .select('*').eq('user_id', currentUser.id).maybeSingle();
   if (data) {
-    notifySettings = { sensor_config: data.sensor_config || {} };
+    notifySettings = {
+      sensor_config:    data.sensor_config    || {},
+      pushover_user_key: data.pushover_user_key || '',
+    };
   }
   updateArmedBadge();
 }
 
 function openSettings() {
   renderNotifySensors();
+  const keyEl = document.getElementById('pushover-key');
+  if (keyEl) keyEl.value = notifySettings.pushover_user_key || '';
   const status = document.getElementById('set-status');
   status.textContent = ''; status.className = 'set-status';
   document.getElementById('settings-modal').classList.add('open');
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  window.location.replace('login.html');
 }
 
 function closeSettings() {
@@ -2054,15 +2096,19 @@ async function saveSettings() {
   status.className = 'set-status';
   status.textContent = 'SAVING…';
 
+  const pushover_user_key = (document.getElementById('pushover-key')?.value || '').trim();
+
   const { error } = await sb.from('notify_settings')
-    .update({ sensor_config, updated_at: new Date().toISOString() })
-    .eq('id', 1);
+    .upsert(
+      { user_id: currentUser.id, sensor_config, pushover_user_key, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
 
   if (error) {
     status.classList.add('err');
     status.textContent = 'ERROR: ' + error.message;
   } else {
-    notifySettings = { sensor_config };
+    notifySettings = { sensor_config, pushover_user_key };
     updateArmedBadge();
     status.classList.add('ok');
     status.textContent = 'SAVED';
@@ -2080,20 +2126,26 @@ document.addEventListener('touchmove', e => {
 // ── Service Worker ───────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () =>
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
+    navigator.serviceWorker.register('sw.js').catch(() => {})
   );
 }
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-updateClock();
-buildTimeline();
-buildSensorCards();
-buildHmLegend();
-buildEventFilter();
-buildDoorFilterBar();
-loadNotifySettings();
-loadDoorStatus();
-loadInitial().then(() => { setupRealtime(); setupConnectionWatchdog(); });
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.replace('login.html'); return; }
+  currentUser = session.user;
+
+  updateClock();
+  buildTimeline();
+  buildSensorCards();
+  buildHmLegend();
+  buildEventFilter();
+  buildDoorFilterBar();
+  await loadNotifySettings();
+  loadDoorStatus();
+  loadInitial().then(() => { setupRealtime(); setupConnectionWatchdog(); });
+})();
 </script>
 </body>
 </html>
