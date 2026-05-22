@@ -1,4 +1,4 @@
-const CACHE = 'motion-v1.116';
+const CACHE = 'motion-v1.117';
 
 self.addEventListener('install', e => {
   const base = self.registration.scope;
