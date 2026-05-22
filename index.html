@@ -1,9 +1,31 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Bewegungsübersicht</title>
+  <title>Motion Overview</title>
+
+  <!-- Favicons -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- iOS / iPhone PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Motion">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+
+  <!-- Theme colour (address bar / status bar) -->
+  <meta name="theme-color" content="#120d0a">
+  <meta name="msapplication-TileColor" content="#120d0a">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap" rel="stylesheet">
@@ -709,6 +731,8 @@
     .panel { display: flex; flex-direction: column; }
     .panel-body { display: flex; flex-direction: column; flex: 1; }
 
+    .protocol > .cell { height: 640px; }
+
     /* Garage state hero */
     .garage-hero {
       padding: 38px 28px 22px;
@@ -777,7 +801,6 @@
       padding: 0;
       display: flex;
       flex-direction: column;
-      min-height: 380px;
     }
     .events-head {
       display: flex;
@@ -811,7 +834,6 @@
     .events-list {
       overflow-y: auto;
       flex: 1;
-      max-height: 460px;
     }
     .events-list::-webkit-scrollbar { width: 4px; }
     .events-list::-webkit-scrollbar-thumb { background: var(--line3); border-radius: 2px; }
@@ -1034,6 +1056,7 @@
         grid-template-columns: 1fr 1fr;
         gap: 8px;
       }
+      .protocol > .cell { height: 420px; }
       .garage-hero { padding: 32px 14px 14px; }
       .garage-hero .garage-state .word { font-size: 32px; }
       .garage-hero .garage-state .indicator { width: 11px; height: 11px; }
@@ -1050,7 +1073,7 @@
       .filter-bar { padding: 8px 12px; gap: 3px; }
       .filter-btn { font-size: 9px; padding: 3px 8px; letter-spacing: 0.10em; }
 
-      .events-list { max-height: 360px; min-height: 0; }
+      .events-list { min-height: 0; }
       .event-row {
         grid-template-columns: 8px 1fr;
         grid-template-areas:
@@ -1236,6 +1259,38 @@
       background: rgba(200, 122, 58, 0.22);
       box-shadow: 0 0 18px rgba(240, 173, 110, 0.18);
     }
+    .set-test {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line2);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      transition: all 0.15s;
+    }
+    .set-test:hover:not(:disabled) { color: var(--copper-bright); border-color: var(--line3); }
+    .set-test:disabled { opacity: 0.4; cursor: default; }
+    .set-key-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--line2);
+      padding: 10px 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-top: 8px;
+    }
+    .set-key-input:focus { border-color: var(--line3); }
+    .set-key-input::placeholder { color: var(--muted2); }
   </style>
 </head>
 <body>
@@ -1247,16 +1302,23 @@
       <span class="logo">HUE<span class="slash">/</span>MOTION</span>
       <div class="conn-badge" id="conn-badge">
         <span class="conn-dot"></span>
-        <span id="conn-label">Verbinde…</span>
+        <span id="conn-label">Connecting…</span>
       </div>
     </div>
-    <div class="tb-c">SYS · BEWEGUNGSMATRIX</div>
+    <div class="tb-c">SYS · MOTION MATRIX</div>
     <div class="tb-r">
       <span id="clock"></span>
-      <button class="icon-btn" id="settings-btn" onclick="openSettings()" aria-label="Push-Benachrichtigungen" title="Push-Benachrichtigungen">
+      <button class="icon-btn" id="settings-btn" onclick="openSettings()" aria-label="Push Notifications" title="Push Notifications">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+      <button class="icon-btn" onclick="logout()" aria-label="Sign out" title="Sign out">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
         </svg>
       </button>
     </div>
@@ -1269,44 +1331,44 @@
       <span class="cell-title">STATUS</span>
       <div class="status-line">
         <span class="status-led" id="overall-led"></span>
-        <span class="status-word" id="overall-word">RUHE</span>
+        <span class="status-word" id="overall-word">IDLE</span>
       </div>
       <div class="status-meta">
-        <span><b id="active-count">0</b>/4 Sensoren aktiv</span>
-        <span>Letzte Bewegung <b id="m-last">–</b></span>
+        <span><b id="active-count">0</b>/4 sensors active</span>
+        <span>Last <b id="m-last">–</b></span>
         <span id="m-last-room"></span>
       </div>
     </div>
 
     <div class="cell hero-cell">
       <span class="cell-coord">A.02</span>
-      <span class="cell-title">EREIGNISSE · 24H</span>
-      <div class="hero-label">Heute</div>
+      <span class="cell-title">EVENTS · 24H</span>
+      <div class="hero-label">Today</div>
       <div class="hero-num">
         <span class="accent" id="m-today">–</span>
         <span class="small-unit">EVT</span>
       </div>
       <div class="hero-sub">
         <span class="delta">↑</span>
-        <span>Aktivster Bereich · <b id="m-top" style="color:var(--text);font-weight:500">–</b></span>
+        <span>Most active · <b id="m-top" style="color:var(--text);font-weight:500">–</b></span>
       </div>
     </div>
 
     <div class="cell hero-cell">
       <span class="cell-coord">A.03</span>
       <span class="cell-title">GARAGE</span>
-      <div class="hero-label">Türzustand</div>
+      <div class="hero-label">Door State</div>
       <div class="garage-state" style="margin-bottom:8px">
         <span class="indicator unknown" id="garage-indicator"></span>
         <span class="word unknown" id="m-garage">–</span>
       </div>
-      <div class="garage-meta">Zuletzt · <b id="m-garage-sub">—</b></div>
+      <div class="garage-meta">Last · <b id="m-garage-sub">—</b></div>
     </div>
 
     <!-- 24h timeline band -->
     <div class="cell timeline-cell">
       <span class="cell-coord">A.04</span>
-      <span class="cell-title">24-STUNDEN-ACHSE · LIVE</span>
+      <span class="cell-title">24H AXIS · LIVE</span>
       <div class="timeline-wrap">
         <div class="tl-track"></div>
         <div class="tl-rows" id="tl-rows"></div>
@@ -1321,7 +1383,7 @@
   <div class="section">
     <div class="cell sensor-rail-cell">
       <span class="cell-coord">B.01</span>
-      <span class="cell-title">SENSORARRAY · 4 ZONEN</span>
+      <span class="cell-title">SENSOR ARRAY · 4 ZONES</span>
       <div class="sensor-rail" id="sensors-grid"></div>
     </div>
   </div>
@@ -1332,14 +1394,14 @@
       <span class="cell-coord">C.01</span>
       <span class="cell-title">HEATMAP</span>
       <div class="hm-tabs">
-        <button class="tab-btn active" onclick="setHeatRange(this,1)">Heute</button>
-        <button class="tab-btn" onclick="setHeatRange(this,7)">7 Tage</button>
+        <button class="tab-btn active" onclick="setHeatRange(this,1)">Today</button>
+        <button class="tab-btn" onclick="setHeatRange(this,7)">7 Days</button>
       </div>
       <div class="hm-grid" id="heatmap"></div>
       <div class="hm-legend">
-        <span>weniger</span>
+        <span>less</span>
         <div class="hm-legend-cells" id="hm-legend-cells"></div>
-        <span>mehr</span>
+        <span>more</span>
         <div class="hm-stats" id="hm-stats"></div>
       </div>
     </div>
@@ -1353,16 +1415,16 @@
         <span class="cell-coord">D.01</span>
         <span class="cell-title">GARAGE · LOG</span>
         <div style="margin-top:4px"></div>
-        <div class="hero-label">Aktueller Zustand</div>
+        <div class="hero-label">Current State</div>
         <div class="garage-state">
           <span class="indicator unknown" id="garage-indicator-2"></span>
           <span class="word unknown" id="m-garage-2">–</span>
         </div>
-        <div class="garage-meta">Zuletzt geändert · <b id="m-garage-sub-2">—</b></div>
+        <div class="garage-meta">Last · <b id="m-garage-sub-2">—</b></div>
       </div>
       <div class="filter-bar" id="door-filter-bar"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 22px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
-        <span class="events-head-l">Protokoll</span>
+        <span class="events-head-l">Log</span>
         <span id="door-count"></span>
       </div>
       <div class="events-list" id="door-events-list"></div>
@@ -1371,8 +1433,8 @@
     <div class="cell events-cell">
       <div class="events-head" style="position:relative">
         <span class="cell-coord">E.01</span>
-        <span class="cell-title">EREIGNISSE</span>
-        <span class="events-head-l" style="margin-top:6px">Live-Stream</span>
+        <span class="cell-title">EVENTS</span>
+        <span class="events-head-l" style="margin-top:6px">Live</span>
         <div class="events-head-r">
           <span id="event-count"></span>
           <button class="tab-btn" id="event-filter-btn" onclick="toggleEventFilter()">Filter</button>
@@ -1386,14 +1448,14 @@
           </select>
         </div>
         <div class="filter-field">
-          <span>Von</span>
+          <span>From</span>
           <input type="datetime-local" id="ef-from" onchange="renderEvents()">
         </div>
         <div class="filter-field">
-          <span>Bis</span>
+          <span>To</span>
           <input type="datetime-local" id="ef-to" onchange="renderEvents()">
         </div>
-        <button class="filter-reset" onclick="resetEventFilter()">Zurücksetzen</button>
+        <button class="filter-reset" onclick="resetEventFilter()">Reset</button>
       </div>
       <div class="events-list" id="events-list"></div>
     </div>
@@ -1405,17 +1467,24 @@
 <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
   <div class="modal">
     <div class="modal-head">
-      <span>Push-Benachrichtigungen</span>
-      <button class="modal-close" onclick="closeSettings()" aria-label="Schließen">&times;</button>
+      <span>Push Notifications</span>
+      <button class="modal-close" onclick="closeSettings()" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
       <div class="set-section">
-        <div class="set-label">Sensoren &amp; Zeitraum</div>
+        <div class="set-label">Pushover User Key</div>
+        <input type="text" id="pushover-key" class="set-key-input"
+               placeholder="u·················" autocomplete="off" spellcheck="false">
+        <button class="set-test" id="test-btn" onclick="testPushover()">Send test notification</button>
+        <div class="set-hint">Your personal key from pushover.net — not the app token.</div>
+      </div>
+      <div class="set-section">
+        <div class="set-label">Sensors &amp; Time Window</div>
         <div id="notify-sensors"></div>
-        <div class="set-hint">Gleiche Start- und Endzeit = ganztägig. Benachrichtigungen kommen auch bei geschlossenem Dashboard.</div>
+        <div class="set-hint">Same start and end time = all day. Notifications arrive even when the dashboard is closed.</div>
       </div>
       <div class="set-status" id="set-status"></div>
-      <button class="set-save" onclick="saveSettings()">Speichern</button>
+      <button class="set-save" onclick="saveSettings()">Save</button>
     </div>
   </div>
 </div>
@@ -1426,16 +1495,17 @@ const SUPABASE_URL  = 'https://ebbuvdzgstrhrcsbrlez.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViYnV2ZHpnc3RyaHJjc2JybGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMjc4ODAsImV4cCI6MjA5MTYwMzg4MH0.RyTzHiqV1TPSZtM7lgenBJbUCTjj5fCUhoWauifjlIE';
 
 const SENSORS = {
-  83:  { name: 'Galerie',  room: 'OG', hex: '#F0AD6E' },
-  57:  { name: 'Haustür',  room: 'EG', hex: '#E0C088' },
-  143: { name: 'Keller',   room: 'UG', hex: '#B5731F' },
-  95:  { name: 'Vorhaus',  room: 'EG', hex: '#D85F2E' },
+  83:  { name: 'Galerie',  hex: '#F0AD6E' },
+  57:  { name: 'Haustür',  hex: '#E0C088' },
+  143: { name: 'Keller',   hex: '#B5731F' },
+  95:  { name: 'Vorhaus',  hex: '#D85F2E' },
 };
 
 const HM_STOPS = ['#181519', '#3a2515', '#7a3f15', '#B5731F', '#F0AD6E'];
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
+let currentUser = null;
 let events = [];
 let heatDays = 1;
 const lastState = {};
@@ -1444,9 +1514,9 @@ const lastState = {};
 function updateClock() {
   const d = new Date();
   document.getElementById('clock').textContent =
-    d.toLocaleString('de-AT', { weekday:'short', day:'2-digit', month:'2-digit' }) +
+    d.toLocaleString('en-GB', { weekday:'short', day:'2-digit', month:'2-digit' }) +
     ' · ' +
-    d.toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
   updateTimelineNow();
 }
 setInterval(updateClock, 1000);
@@ -1504,8 +1574,7 @@ function buildSensorCards() {
         <div class="sr-id-info">
           <div class="sr-name">${s.name}</div>
           <div class="sr-meta">
-            <span class="pill">${s.room}</span>
-            <span id="pill-${id}">RUHIG</span>
+            <span id="pill-${id}">IDLE</span>
           </div>
         </div>
         <div class="sr-stats">
@@ -1516,7 +1585,7 @@ function buildSensorCards() {
         </div>
         <div class="sr-count" id="count-${id}">
           <span class="num">0</span>
-          <span class="lbl">heute</span>
+          <span class="lbl">today</span>
         </div>
       </div>
     `).join('');
@@ -1532,9 +1601,9 @@ function buildHmLegend() {
 function buildEventFilter() {
   const sel = document.getElementById('ef-sensor');
   if (!sel) return;
-  sel.innerHTML = `<option value="all">Alle</option>` +
+  sel.innerHTML = `<option value="all">All</option>` +
     Object.entries(SENSORS).map(([id, s]) =>
-      `<option value="${id}">${s.name} (${s.room})</option>`
+      `<option value="${id}">${s.name}</option>`
     ).join('');
 }
 
@@ -1570,20 +1639,20 @@ function updateSensorCards() {
     if (!row) return;
 
     row.classList.toggle('motion', isActive);
-    pill.textContent = isActive ? 'AKTIV' : 'RUHIG';
+    pill.textContent = isActive ? 'ACTIVE' : 'IDLE';
     pill.style.color = isActive ? 'var(--copper-bright)' : 'var(--muted)';
     pill.style.letterSpacing = '0.18em';
     pill.style.fontWeight = isActive ? '600' : '400';
 
     if (latest) {
       const ago = Math.round((now - new Date(latest.created_at)) / 60000);
-      const t = new Date(latest.created_at).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' });
-      last.textContent = `LETZTE BEWEGUNG · ${t} · VOR ${ago < 1 ? '<1' : ago} MIN`;
+      const t = new Date(latest.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      last.textContent = `LAST · ${t} · ${ago < 1 ? '<1' : ago} MIN AGO`;
     } else {
-      last.textContent = 'KEINE DATEN';
+      last.textContent = 'NO DATA';
     }
 
-    cnt.innerHTML = `<span class="num">${todayEvts.length}</span><span class="lbl">heute</span>`;
+    cnt.innerHTML = `<span class="num">${todayEvts.length}</span><span class="lbl">today</span>`;
 
     const spark = document.getElementById(`spark-${id}`);
     const segs  = spark.querySelectorAll('.spark-seg');
@@ -1632,7 +1701,7 @@ function updateMetrics() {
   const latest = events[0];
   if (latest) {
     const ago = Math.round((now - new Date(latest.created_at)) / 60000);
-    document.getElementById('m-last').textContent = ago < 1 ? 'jetzt' : `vor ${ago} min`;
+    document.getElementById('m-last').textContent = ago < 1 ? 'now' : `${ago} min ago`;
     document.getElementById('m-last-room').textContent = SENSORS[latest.sensor_id]?.name || latest.sensor_id;
   }
 
@@ -1644,15 +1713,15 @@ function updateMetrics() {
   if (activeCount > 0) {
     led.classList.add('alert');
     word.classList.add('alert');
-    word.textContent = 'BEWEGUNG';
+    word.textContent = 'MOTION';
   } else {
     led.classList.remove('alert');
     word.classList.remove('alert');
-    word.textContent = 'RUHE';
+    word.textContent = 'IDLE';
   }
 
   // Heatmap stats
-  const total = events.filter(e => new Date(e.created_at) >= new Date(Date.now() - heatDays * 86400000)).length;
+  const total = events.filter(e => new Date(e.created_at) >= heatSince()).length;
   const hmStats = document.getElementById('hm-stats');
   if (hmStats) {
     hmStats.innerHTML =
@@ -1677,7 +1746,7 @@ function renderEvents(newId = null) {
   document.getElementById('event-count').textContent = `${shown.length}`;
 
   document.getElementById('events-list').innerHTML = shown.map((e, i) => {
-    const t = new Date(e.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const t = new Date(e.created_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
     const s = SENSORS[e.sensor_id];
     const isNew = newId && e.id === newId && i === 0;
     return `
@@ -1685,14 +1754,20 @@ function renderEvents(newId = null) {
         <div class="ev-dot" style="background:${s?.hex || '#888'};color:${s?.hex || '#888'}"></div>
         <span class="ev-time">${t}</span>
         <span class="ev-name">${s?.name || e.sensor_name}</span>
-        <span class="ev-room">${s?.room || e.room}</span>
       </div>`;
-  }).join('') || `<div class="empty-state">Keine Ereignisse</div>`;
+  }).join('') || `<div class="empty-state">No events</div>`;
 }
 
 // ── Heatmap ───────────────────────────────────────────────────────────────────
+function heatSince() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  if (heatDays > 1) d.setDate(d.getDate() - (heatDays - 1));
+  return d;
+}
+
 function renderHeatmap() {
-  const since = new Date(Date.now() - heatDays * 86400000);
+  const since = heatSince();
   const subset = events.filter(e => new Date(e.created_at) >= since);
 
   const data = {};
@@ -1738,7 +1813,7 @@ async function loadInitial() {
     .order('created_at', { ascending: false })
     .limit(500);
 
-  if (error) { console.error('Ladefehler:', error); return; }
+  if (error) { console.error('Load error:', error); return; }
   events = data || [];
 
   const { data: allLast } = await sb
@@ -1776,10 +1851,10 @@ function setConnState(state) {
     label.textContent = 'LIVE';
   } else if (state === 'connecting') {
     badge.classList.remove('live');
-    label.textContent = 'Verbinde…';
+    label.textContent = 'Connecting…';
   } else {
     badge.classList.remove('live');
-    label.textContent = 'getrennt';
+    label.textContent = 'offline';
   }
 }
 
@@ -1873,7 +1948,7 @@ let activeDoorFilter = 'all';
 
 function buildDoorFilterBar() {
   document.getElementById('door-filter-bar').innerHTML =
-    `<button class="filter-btn active" onclick="setDoorFilter(this,'all')">Alle</button>
+    `<button class="filter-btn active" onclick="setDoorFilter(this,'all')">All</button>
      <button class="filter-btn" onclick="setDoorFilter(this,'open')">open</button>
      <button class="filter-btn" onclick="setDoorFilter(this,'closed')">closed</button>`;
 }
@@ -1916,8 +1991,8 @@ function renderDoorPanel() {
     word.textContent = g.state;
     word.className = 'word ' + (g.state === 'open' ? 'open' : 'closed');
     indicator.className = 'indicator ' + (g.state === 'open' ? 'open' : 'closed');
-    const time = new Date(g.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
-    const d = new Date(g.created_at).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' });
+    const time = new Date(g.created_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const d = new Date(g.created_at).toLocaleDateString('en-GB', { day:'2-digit', month:'2-digit' });
     sub.textContent = `${d} ${time}`;
   });
 }
@@ -1929,7 +2004,7 @@ function renderDoorEventsList() {
   const shown = filtered.slice(0, 100);
   document.getElementById('door-count').textContent = `${shown.length}`;
   document.getElementById('door-events-list').innerHTML = shown.map(e => {
-    const t = new Date(e.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
+    const t = new Date(e.created_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
     const isOpen = e.state === 'open';
     const dotColor = isOpen ? 'var(--alert)' : 'var(--ok)';
     return `
@@ -1939,7 +2014,7 @@ function renderDoorEventsList() {
         <span class="ev-name">${e.door_name}</span>
         <span class="ev-room state-${e.state}">${e.state}</span>
       </div>`;
-  }).join('') || `<div class="empty-state">Keine Einträge</div>`;
+  }).join('') || `<div class="empty-state">No entries</div>`;
 }
 
 async function loadDoorStatus() {
@@ -1980,11 +2055,10 @@ function renderNotifySensors() {
             <input type="checkbox" id="snsr-${id}" value="${id}" ${cfg.enabled ? 'checked' : ''}>
             <span class="set-dot" style="background:${s.hex};color:${s.hex}"></span>
             <label for="snsr-${id}" style="font-size:13px;cursor:pointer;color:var(--text)">${s.name}</label>
-            <span class="set-room">${s.room}</span>
           </div>
           <div class="set-sensor-window">
-            von <select id="sw-s-${id}">${hourOptions(cfg.window_start)}</select>
-            bis <select id="sw-e-${id}">${hourOptions(cfg.window_end)}</select>
+            from <select id="sw-s-${id}">${hourOptions(cfg.window_start)}</select>
+            to <select id="sw-e-${id}">${hourOptions(cfg.window_end)}</select>
           </div>
         </div>`;
     }).join('');
@@ -1996,22 +2070,66 @@ function updateArmedBadge() {
 }
 
 async function loadNotifySettings() {
-  const { data } = await sb.from('notify_settings').select('*').eq('id', 1).maybeSingle();
+  if (!currentUser) return;
+  const { data } = await sb.from('notify_settings')
+    .select('*').eq('user_id', currentUser.id).maybeSingle();
   if (data) {
-    notifySettings = { sensor_config: data.sensor_config || {} };
+    notifySettings = {
+      sensor_config:    data.sensor_config    || {},
+      pushover_user_key: data.pushover_user_key || '',
+    };
   }
   updateArmedBadge();
 }
 
 function openSettings() {
   renderNotifySensors();
+  const keyEl = document.getElementById('pushover-key');
+  if (keyEl) keyEl.value = notifySettings.pushover_user_key || '';
   const status = document.getElementById('set-status');
   status.textContent = ''; status.className = 'set-status';
   document.getElementById('settings-modal').classList.add('open');
 }
 
+async function logout() {
+  await sb.auth.signOut();
+  window.location.replace('login.html');
+}
+
 function closeSettings() {
   document.getElementById('settings-modal').classList.remove('open');
+}
+
+async function testPushover() {
+  const key    = document.getElementById('pushover-key')?.value?.trim();
+  const btn    = document.getElementById('test-btn');
+  const status = document.getElementById('set-status');
+
+  if (!key) {
+    status.className = 'set-status err';
+    status.textContent = 'Enter your Pushover user key first';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  status.className = 'set-status';
+  status.textContent = '';
+
+  const { data, error } = await sb.functions.invoke('pushover-test', {
+    body: { pushover_user_key: key },
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Send test notification';
+
+  if (error || data?.error) {
+    status.className = 'set-status err';
+    status.textContent = 'ERROR: ' + (data?.error ?? error?.message);
+  } else {
+    status.className = 'set-status ok';
+    status.textContent = 'Test sent — check your phone';
+  }
 }
 
 async function saveSettings() {
@@ -2025,20 +2143,46 @@ async function saveSettings() {
 
   const status = document.getElementById('set-status');
   status.className = 'set-status';
-  status.textContent = 'SPEICHERE…';
+  status.textContent = 'SAVING…';
+
+  const pushover_user_key = (document.getElementById('pushover-key')?.value || '').trim();
 
   const { error } = await sb.from('notify_settings')
-    .update({ sensor_config, updated_at: new Date().toISOString() })
-    .eq('id', 1);
+    .upsert(
+      { user_id: currentUser.id, sensor_config, pushover_user_key, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
 
   if (error) {
     status.classList.add('err');
-    status.textContent = 'FEHLER: ' + error.message;
+    status.textContent = 'ERROR: ' + error.message;
   } else {
-    notifySettings = { sensor_config };
+    notifySettings = { sensor_config, pushover_user_key };
     updateArmedBadge();
     status.classList.add('ok');
-    status.textContent = 'GESPEICHERT';
+    status.textContent = 'SAVED';
+
+    if (pushover_user_key) {
+      const fmt = h => String(h).padStart(2, '0') + ':00';
+      const lines = Object.entries(sensor_config)
+        .filter(([, c]) => c.enabled)
+        .map(([id, c]) => {
+          const name   = SENSORS[id]?.name ?? id;
+          const window = c.window_start === c.window_end
+            ? 'all day'
+            : `${fmt(c.window_start)} – ${fmt(c.window_end)}`;
+          return `${name}: ${window}`;
+        });
+      if (lines.length) {
+        sb.functions.invoke('pushover-test', {
+          body: {
+            pushover_user_key,
+            title:   'Motion · Notifications saved',
+            message: lines.join('\n'),
+          },
+        });
+      }
+    }
   }
 }
 
@@ -2050,16 +2194,29 @@ document.addEventListener('touchmove', e => {
   if (e.touches.length > 1) e.preventDefault();
 }, { passive: false });
 
+// ── Service Worker ───────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () =>
+    navigator.serviceWorker.register('sw.js').catch(() => {})
+  );
+}
+
 // ── Start ─────────────────────────────────────────────────────────────────────
-updateClock();
-buildTimeline();
-buildSensorCards();
-buildHmLegend();
-buildEventFilter();
-buildDoorFilterBar();
-loadNotifySettings();
-loadDoorStatus();
-loadInitial().then(() => { setupRealtime(); setupConnectionWatchdog(); });
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.replace('login.html'); return; }
+  currentUser = session.user;
+
+  updateClock();
+  buildTimeline();
+  buildSensorCards();
+  buildHmLegend();
+  buildEventFilter();
+  buildDoorFilterBar();
+  await loadNotifySettings();
+  loadDoorStatus();
+  loadInitial().then(() => { setupRealtime(); setupConnectionWatchdog(); });
+})();
 </script>
 </body>
 </html>
