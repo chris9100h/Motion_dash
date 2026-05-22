@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await userSb.auth.getUser();
     if (authError || !user) return json({ error: "unauthorized" }, 401);
 
-    const { pushover_user_key } = await req.json();
+    const { pushover_user_key, title, message } = await req.json();
     if (!pushover_user_key?.trim())
       return json({ error: "No Pushover user key provided" }, 400);
     if (!PUSHOVER_TOKEN)
@@ -47,8 +47,8 @@ Deno.serve(async (req) => {
       body: new URLSearchParams({
         token:   PUSHOVER_TOKEN,
         user:    pushover_user_key.trim(),
-        title:   "Motion · Test",
-        message: "Pushover notifications are working correctly.",
+        title:   title   ?? "Motion · Test",
+        message: message ?? "Pushover notifications are working correctly.",
       }),
     });
 
