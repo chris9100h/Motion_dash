@@ -4,309 +4,880 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Bewegungsübersicht</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:       #0e0f11;
-      --surface:  #16181c;
-      --surface2: #1e2128;
-      --border:   rgba(255,255,255,0.07);
-      --border2:  rgba(255,255,255,0.14);
-      --text:     #e8e9eb;
-      --muted:    #6b7180;
-      --mono:     'IBM Plex Mono', monospace;
-      --sans:     'IBM Plex Sans', sans-serif;
+      /* Warm near-blacks */
+      --bg:        #0b0907;
+      --bg-deep:   #050403;
+      --surface:   #131009;
+      --surface2:  #1c1810;
+      --surface3:  #261f15;
 
-      --teal:     #1D9E75; --teal-l: #5DCAA5; --teal-dim: rgba(29,158,117,0.15);
-      --blue:     #378ADD; --blue-l: #85B7EB; --blue-dim: rgba(55,138,221,0.15);
-      --amber:    #BA7517; --amber-l:#EF9F27; --amber-dim:rgba(186,117,23,0.15);
-      --coral:    #D85A30; --coral-l:#F0997B; --coral-dim:rgba(216,90,48,0.15);
+      /* Copper-tinted lines */
+      --border:    rgba(200, 122, 58, 0.10);
+      --border2:   rgba(200, 122, 58, 0.22);
+      --border3:   rgba(200, 122, 58, 0.40);
+
+      /* Type */
+      --text:      #ede2d1;
+      --text-dim:  #b8a892;
+      --muted:     #7a6a55;
+      --muted2:    #574b3c;
+
+      --mono:      'IBM Plex Mono', ui-monospace, monospace;
+      --sans:      'IBM Plex Sans', -apple-system, sans-serif;
+
+      /* Copper palette */
+      --copper:        #C87A3A;
+      --copper-bright: #E8A668;
+      --copper-deep:   #8C4E1E;
+      --copper-dim:    rgba(200, 122, 58, 0.14);
+      --copper-glow:   rgba(232, 166, 104, 0.45);
+
+      /* Per-sensor copper shifts */
+      --s-galerie:  #E8A668;  /* bright copper */
+      --s-haustur:  #D9B074;  /* warm brass */
+      --s-keller:   #B26A2A;  /* deep amber */
+      --s-vorhaus:  #C45A2C;  /* rust copper */
+
+      /* Semantic */
+      --ok:        #9CB070;
+      --warn:      #E8A668;
+      --alert:     #D8633A;
     }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
-      background: var(--bg); color: var(--text);
-      font-family: var(--sans); font-size: 14px; line-height: 1.6;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(200, 122, 58, 0.06), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(232, 166, 104, 0.04), transparent 60%);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.55;
       min-height: 100vh;
       touch-action: manipulation;
       -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* ── Topbar ── */
     .topbar {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 28px; border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; background: var(--bg); z-index: 20;
-      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(11, 9, 7, 0.85);
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px) saturate(140%);
+      z-index: 20;
     }
-    .topbar-left { display: flex; align-items: center; gap: 14px; }
-    .logo { font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; color: var(--teal-l); }
+    .topbar-left { display: flex; align-items: center; gap: 18px; }
+    .logo {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      color: var(--copper-bright);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background: var(--copper);
+      box-shadow: 0 0 12px var(--copper-glow);
+      border-radius: 1px;
+      transform: rotate(45deg);
+    }
+    .logo .slash { color: var(--muted2); font-weight: 400; }
     .conn-badge {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 11px; font-family: var(--mono);
-      background: var(--surface); border: 1px solid var(--border);
-      padding: 3px 10px; border-radius: 20px; color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 10px;
+      font-family: var(--mono);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 4px 11px 4px 10px;
+      border-radius: 2px;
+      color: var(--muted);
       transition: all 0.3s;
     }
-    .conn-badge.live { color: var(--teal-l); border-color: rgba(29,158,117,0.3); background: var(--teal-dim); }
-    .conn-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-    .conn-badge.live .conn-dot { animation: blink 2s ease-in-out infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+    .conn-badge.live {
+      color: var(--copper-bright);
+      border-color: var(--border3);
+      background: var(--copper-dim);
+    }
+    .conn-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 0 currentColor;
+    }
+    .conn-badge.live .conn-dot { animation: pulse 1.8s ease-out infinite; }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 var(--copper-glow); }
+      70%  { box-shadow: 0 0 0 6px rgba(232,166,104,0); }
+      100% { box-shadow: 0 0 0 0 rgba(232,166,104,0); }
+    }
+
     .topbar-right {
-      font-family: var(--mono); font-size: 11px; color: var(--muted);
-      display: flex; align-items: center; gap: 12px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
     .icon-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 30px; height: 30px; border-radius: 8px;
-      background: var(--surface); border: 1px solid var(--border);
-      color: var(--muted); cursor: pointer; transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s;
     }
-    .icon-btn:hover { color: var(--text); border-color: var(--border2); }
-    .icon-btn.armed { color: var(--teal-l); border-color: rgba(29,158,117,0.35); background: var(--teal-dim); }
+    .icon-btn:hover {
+      color: var(--copper-bright);
+      border-color: var(--border2);
+      background: var(--surface3);
+    }
+    .icon-btn.armed {
+      color: var(--copper-bright);
+      border-color: var(--border3);
+      background: var(--copper-dim);
+      box-shadow: 0 0 12px rgba(232, 166, 104, 0.15) inset;
+    }
 
     /* ── Layout ── */
-    .main { padding: 22px 28px 40px; max-width: 1280px; margin: 0 auto; }
+    .main {
+      padding: 24px 28px 56px;
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    /* Section labels */
+    .section-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin: 26px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, var(--border2), transparent);
+    }
+    .section-label:first-child { margin-top: 0; }
 
     /* ── Metrics ── */
-    .metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
-    .metric {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 16px 18px;
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 18px;
     }
-    .metric-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
-    .metric-value { font-family: var(--mono); font-size: 28px; font-weight: 500; }
-    .metric-value.sm { font-size: 17px; padding-top: 5px; }
-    .metric-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .metric {
+      background: var(--surface);
+      padding: 18px 20px;
+      position: relative;
+    }
+    .metric-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin-bottom: 10px;
+    }
+    .metric-value {
+      font-family: var(--mono);
+      font-size: 34px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .metric-value.sm {
+      font-size: 19px;
+      font-weight: 500;
+      padding-top: 6px;
+      letter-spacing: 0;
+    }
+    .metric-sub {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 5px;
+      letter-spacing: 0.04em;
+    }
+    .metric:first-child .metric-value { color: var(--copper-bright); }
 
     /* ── Sensor cards ── */
-    .sensors-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
+    .sensors-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 6px;
+    }
     .sensor-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 15px 16px;
-      transition: border-color 0.4s, box-shadow 0.4s;
-      position: relative; overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 14px 16px 12px;
+      transition: border-color 0.4s, box-shadow 0.4s, background 0.4s;
+      position: relative;
+      overflow: hidden;
     }
     .sensor-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: transparent; transition: background 0.4s;
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: transparent;
+      transition: background 0.4s, box-shadow 0.4s;
     }
-    .sensor-card.motion { border-color: var(--teal); }
-    .sensor-card.motion::before { background: var(--teal); }
+    .sensor-card.motion {
+      border-color: var(--border3);
+      background: linear-gradient(180deg, rgba(200, 122, 58, 0.04), var(--surface));
+    }
+    .sensor-card.motion::before {
+      background: var(--copper);
+      box-shadow: 0 0 16px var(--copper-glow);
+    }
 
-    .sc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-    .sc-name { font-size: 14px; font-weight: 500; }
-    .sc-meta { font-size: 10px; color: var(--muted); margin-top: 1px; font-family: var(--mono); }
-    .sc-pill {
-      font-size: 10px; padding: 2px 9px; border-radius: 20px;
-      font-family: var(--mono); border: 1px solid transparent;
-      transition: all 0.3s; white-space: nowrap;
+    .sc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      gap: 8px;
     }
-    .sc-pill.idle   { background: var(--surface2); color: var(--muted); border-color: var(--border); }
-    .sc-pill.active { background: var(--teal-dim); color: var(--teal-l); border-color: rgba(29,158,117,0.35); }
-    .sc-last { font-size: 11px; color: var(--muted); margin-bottom: 10px; min-height: 16px; }
-    .sc-count { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-    .sc-count span { color: var(--text); font-size: 14px; }
+    .sc-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: -0.005em;
+    }
+    .sc-meta {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+      font-family: var(--mono);
+      letter-spacing: 0.06em;
+    }
+    .sc-pill {
+      font-size: 9px;
+      padding: 3px 9px;
+      border-radius: 2px;
+      font-family: var(--mono);
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .sc-pill.idle {
+      background: var(--surface2);
+      color: var(--muted);
+      border-color: var(--border);
+    }
+    .sc-pill.active {
+      background: var(--copper-dim);
+      color: var(--copper-bright);
+      border-color: var(--border3);
+      box-shadow: 0 0 12px rgba(232, 166, 104, 0.18);
+    }
+    .sc-last {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      min-height: 16px;
+      font-family: var(--mono);
+      letter-spacing: 0.02em;
+    }
+    .sc-count {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .sc-count span {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      margin-right: 4px;
+    }
 
     /* Sparkline */
-    .sparkbar { display: flex; gap: 2px; align-items: flex-end; height: 28px; margin-top: 10px; }
-    .spark-seg { flex: 1; border-radius: 1px; transition: all 0.4s; min-height: 3px; position: relative; }
+    .sparkbar {
+      display: flex;
+      gap: 2px;
+      align-items: flex-end;
+      height: 30px;
+      margin-top: 12px;
+      padding-top: 4px;
+      border-top: 1px dashed var(--border);
+    }
+    .spark-seg {
+      flex: 1;
+      border-radius: 1px;
+      transition: all 0.4s;
+      min-height: 2px;
+      position: relative;
+    }
     .spark-seg:hover::after {
       content: attr(data-tip);
-      position: absolute; bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%);
-      background: var(--surface2); border: 1px solid var(--border2);
-      color: var(--text); font-size: 10px; font-family: var(--mono);
-      padding: 3px 8px; border-radius: 5px; white-space: nowrap;
-      pointer-events: none; z-index: 10;
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-deep);
+      border: 1px solid var(--border3);
+      color: var(--copper-bright);
+      font-size: 10px;
+      font-family: var(--mono);
+      padding: 4px 8px;
+      border-radius: 2px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 10;
+      letter-spacing: 0.04em;
     }
 
     /* ── Main panels ── */
-    .panels { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
-
-    .panels.full { grid-template-columns: 1fr 1fr; }
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
 
     .panel {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; overflow: hidden;
-      display: flex; flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
     .panel-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 13px 18px; border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
     }
-    .panel-title { font-size: 13px; font-weight: 500; }
-    .panel-tabs { display: flex; gap: 4px; }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-family: var(--mono);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-title::before {
+      content: "";
+      width: 4px;
+      height: 4px;
+      background: var(--copper);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--copper-glow);
+    }
+    .panel-tabs { display: flex; gap: 2px; }
     .tab-btn {
-      font-size: 11px; padding: 3px 10px; border-radius: 6px; cursor: pointer;
-      background: transparent; color: var(--muted); border: 1px solid transparent;
-      font-family: var(--sans); transition: all 0.15s;
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 4px 11px;
+      border-radius: 2px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid transparent;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      transition: all 0.15s;
     }
-    .tab-btn.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+    .tab-btn:hover { color: var(--text-dim); }
+    .tab-btn.active {
+      background: var(--copper-dim);
+      color: var(--copper-bright);
+      border-color: var(--border3);
+    }
 
     /* Heatmap */
-    .heatmap-body { padding: 16px 18px; overflow-x: auto; }
-    .hm-grid {
-      display: grid; grid-template-columns: 62px repeat(24, 1fr);
-      gap: 3px; align-items: center; min-width: 480px;
+    .heatmap-body {
+      padding: 18px 20px 20px;
+      overflow-x: auto;
     }
-    .hm-row-label { font-size: 10px; color: var(--muted); text-align: right; padding-right: 8px; white-space: nowrap; }
-    .hm-col-label { font-size: 9px; color: var(--muted); text-align: center; font-family: var(--mono); }
+    .hm-grid {
+      display: grid;
+      grid-template-columns: 72px repeat(24, 1fr);
+      gap: 3px;
+      align-items: center;
+      min-width: 520px;
+    }
+    .hm-row-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: right;
+      padding-right: 10px;
+      white-space: nowrap;
+      font-weight: 400;
+    }
+    .hm-col-label {
+      font-size: 9px;
+      color: var(--muted);
+      text-align: center;
+      font-family: var(--mono);
+      letter-spacing: 0.04em;
+    }
     .hm-cell {
-      height: 22px; border-radius: 3px; background: var(--surface2);
-      cursor: default; transition: background 0.3s;
+      height: 26px;
+      border-radius: 2px;
+      background: var(--surface2);
+      cursor: default;
+      transition: background 0.3s, transform 0.15s;
       position: relative;
+    }
+    .hm-cell:hover {
+      transform: scale(1.08);
+      z-index: 5;
     }
     .hm-cell:hover::after {
       content: attr(data-tip);
-      position: absolute; bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%);
-      background: var(--surface2); border: 1px solid var(--border2);
-      color: var(--text); font-size: 10px; font-family: var(--mono);
-      padding: 3px 8px; border-radius: 5px; white-space: nowrap;
-      pointer-events: none; z-index: 10;
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-deep);
+      border: 1px solid var(--border3);
+      color: var(--copper-bright);
+      font-size: 10px;
+      font-family: var(--mono);
+      padding: 4px 8px;
+      border-radius: 2px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 10;
+      letter-spacing: 0.04em;
     }
 
-    /* Events panel */
+    /* Heatmap legend */
+    .hm-legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    .hm-legend-cells { display: flex; gap: 2px; }
+    .hm-legend-cells .hm-cell { width: 14px; height: 14px; }
+
+    /* Events / Door panels */
     .filter-bar {
-      display: flex; gap: 6px; padding: 10px 14px;
-      border-bottom: 1px solid var(--border); flex-wrap: wrap; flex-shrink: 0;
+      display: flex;
+      gap: 4px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      flex-shrink: 0;
+      background: var(--bg);
     }
     .filter-btn {
-      font-size: 10px; padding: 3px 10px; border-radius: 20px; cursor: pointer;
-      background: transparent; color: var(--muted); border: 1px solid var(--border);
-      font-family: var(--sans); transition: all 0.15s;
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 4px 11px;
+      border-radius: 2px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      transition: all 0.15s;
     }
-    .filter-btn.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+    .filter-btn:hover { color: var(--text-dim); border-color: var(--border2); }
+    .filter-btn.active {
+      background: var(--copper-dim);
+      color: var(--copper-bright);
+      border-color: var(--border3);
+    }
 
-    .events-list { overflow-y: auto; flex: 1; max-height: 480px; }
-    .events-list::-webkit-scrollbar { width: 3px; }
-    .events-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+    .events-list {
+      overflow-y: auto;
+      flex: 1;
+      max-height: 480px;
+      min-height: 280px;
+    }
+    .events-list::-webkit-scrollbar { width: 4px; }
+    .events-list::-webkit-scrollbar-track { background: transparent; }
+    .events-list::-webkit-scrollbar-thumb {
+      background: var(--border3);
+      border-radius: 2px;
+    }
+    .events-list::-webkit-scrollbar-thumb:hover { background: var(--copper); }
 
     .event-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 16px; border-bottom: 1px solid var(--border);
-      transition: background 0.1s; cursor: default;
+      display: grid;
+      grid-template-columns: 12px 60px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+      cursor: default;
     }
     .event-row:hover { background: var(--surface2); }
     .event-row:last-child { border-bottom: none; }
-    .event-row.new { animation: flash 0.6s ease-out; }
-    @keyframes flash { 0%{background: rgba(29,158,117,0.15)} 100%{background:transparent} }
-
-    .ev-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .ev-time { font-family: var(--mono); font-size: 10px; color: var(--muted); min-width: 50px; }
-    .ev-name { font-size: 12px; flex: 1; }
-    .ev-room {
-      font-size: 10px; font-family: var(--mono); padding: 1px 6px;
-      border-radius: 4px; background: var(--surface2); color: var(--muted);
-      border: 1px solid var(--border);
+    .event-row.new { animation: flash 0.8s ease-out; }
+    @keyframes flash {
+      0%   { background: rgba(232, 166, 104, 0.18); }
+      100% { background: transparent; }
     }
 
-    /* ── Event Filter Panel ── */
+    .ev-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px currentColor;
+    }
+    .ev-time {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    .ev-name {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 400;
+    }
+    .ev-room {
+      font-size: 9px;
+      font-family: var(--mono);
+      padding: 2px 7px;
+      border-radius: 2px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .ev-room.state-open {
+      color: var(--alert);
+      border-color: rgba(216, 99, 58, 0.35);
+      background: rgba(216, 99, 58, 0.08);
+    }
+    .ev-room.state-closed {
+      color: var(--ok);
+      border-color: rgba(156, 176, 112, 0.30);
+      background: rgba(156, 176, 112, 0.06);
+    }
+
+    /* Event filter dropdown */
     .event-filter-panel {
-      display: none; padding: 10px 14px; gap: 10px;
-      border-bottom: 1px solid var(--border); flex-wrap: wrap; align-items: flex-end;
+      display: none;
+      padding: 12px 16px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      align-items: flex-end;
+      background: var(--bg);
     }
     .event-filter-panel.open { display: flex; }
-    .filter-field { display: flex; flex-direction: column; gap: 4px; }
-    .filter-field span { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-    .filter-field select, .filter-field input[type=datetime-local] {
-      background: var(--surface2); color: var(--text);
-      border: 1px solid var(--border2); border-radius: 6px;
-      padding: 5px 8px; font-family: var(--mono); font-size: 11px;
+    .filter-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
-    .filter-field input[type=datetime-local]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+    .filter-field span {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    .filter-field select,
+    .filter-field input[type=datetime-local] {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border2);
+      border-radius: 2px;
+      padding: 6px 9px;
+      font-family: var(--mono);
+      font-size: 11px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .filter-field select:focus,
+    .filter-field input[type=datetime-local]:focus {
+      border-color: var(--border3);
+    }
+    .filter-field input[type=datetime-local]::-webkit-calendar-picker-indicator {
+      filter: invert(0.5) sepia(1) saturate(2) hue-rotate(-10deg);
+    }
     .filter-reset {
-      font-size: 11px; color: var(--muted); background: transparent;
-      border: none; cursor: pointer; padding: 0; align-self: flex-end; padding-bottom: 6px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0 0 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      align-self: flex-end;
     }
-    .filter-reset:hover { color: var(--text); }
+    .filter-reset:hover { color: var(--copper-bright); }
+
+    .empty-state {
+      padding: 36px 24px;
+      text-align: center;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
 
     /* ── Responsive ── */
     @media (max-width: 1024px) {
       .panels { grid-template-columns: 1fr; }
+      .sensors-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 800px) {
-      .metrics { grid-template-columns: repeat(2,1fr); }
-      .sensors-grid { grid-template-columns: repeat(2,1fr); }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 500px) {
-      .main { padding: 14px 14px 32px; }
-      .topbar { padding: 12px 14px; }
+      .main { padding: 16px 14px 36px; }
+      .topbar { padding: 12px 16px; }
       .metrics, .sensors-grid { grid-template-columns: 1fr 1fr; }
+      .metric { padding: 14px 14px; }
+      .metric-value { font-size: 26px; }
+      .metric-value.sm { font-size: 16px; }
+      .event-row { grid-template-columns: 10px 52px 1fr auto; gap: 8px; padding: 9px 14px; }
+      .ev-name { font-size: 12px; }
     }
-    /* Heatmap auf schmalen Screens (iPhone) ohne horizontales Scrollen */
     @media (max-width: 640px) {
-      .heatmap-body { padding: 12px 8px; }
+      .heatmap-body { padding: 14px 10px 16px; }
       .hm-grid {
-        grid-template-columns: 44px repeat(24, 1fr);
-        gap: 2px; min-width: 0;
+        grid-template-columns: 50px repeat(24, 1fr);
+        gap: 2px;
+        min-width: 0;
       }
-      .hm-row-label { font-size: 9px; padding-right: 4px; }
+      .hm-row-label { font-size: 10px; padding-right: 6px; }
       .hm-col-label { font-size: 7px; }
-      .hm-cell { height: 15px; }
+      .hm-cell { height: 18px; }
     }
 
-    /* ── Einstellungs-Modal ── */
+    /* ── Settings modal ── */
     .modal-overlay {
-      display: none; position: fixed; inset: 0; z-index: 50;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
-      align-items: center; justify-content: center; padding: 20px;
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(5, 4, 3, 0.7);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
     .modal-overlay.open { display: flex; }
     .modal {
-      background: var(--surface); border: 1px solid var(--border2);
-      border-radius: 12px; width: 100%; max-width: 380px;
-      max-height: 90vh; overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border3);
+      border-radius: 4px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5),
+                  0 0 1px rgba(232, 166, 104, 0.4);
     }
     .modal-head {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 18px; border-bottom: 1px solid var(--border);
-      font-size: 13px; font-weight: 500;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--copper-bright);
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
     }
     .modal-close {
-      background: transparent; border: none; color: var(--muted);
-      font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 4px;
+      transition: color 0.15s;
     }
-    .modal-close:hover { color: var(--text); }
-    .modal-body { padding: 16px 18px; }
-    .set-section { margin-bottom: 18px; }
+    .modal-close:hover { color: var(--copper-bright); }
+    .modal-body { padding: 18px 20px; }
+    .set-section { margin-bottom: 20px; }
     .set-label {
-      font-size: 10px; color: var(--muted); text-transform: uppercase;
-      letter-spacing: 0.08em; margin-bottom: 10px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin-bottom: 12px;
     }
     .set-sensor-row {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
       flex-wrap: wrap;
     }
-    .set-sensor-left { display: flex; align-items: center; gap: 8px; }
-    .set-sensor-left input { accent-color: var(--teal); width: 16px; height: 16px; cursor: pointer; }
-    .set-sensor-window { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
-    .set-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .set-room { font-size: 10px; font-family: var(--mono); color: var(--muted); }
+    .set-sensor-row:last-child { border-bottom: none; }
+    .set-sensor-left { display: flex; align-items: center; gap: 10px; }
+    .set-sensor-left input {
+      accent-color: var(--copper);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    .set-sensor-window {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .set-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px currentColor;
+    }
+    .set-room {
+      font-size: 9px;
+      font-family: var(--mono);
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+    }
     .set-sensor-window select {
-      background: var(--surface2); color: var(--text);
-      border: 1px solid var(--border2); border-radius: 6px;
-      padding: 3px 6px; font-family: var(--mono); font-size: 11px;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border2);
+      border-radius: 2px;
+      padding: 4px 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+      outline: none;
     }
-    .set-hint { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
-    .set-status { font-size: 12px; min-height: 18px; margin-bottom: 10px; }
-    .set-status.ok  { color: var(--teal-l); }
-    .set-status.err { color: var(--coral-l); }
+    .set-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 12px;
+      line-height: 1.5;
+      padding: 10px 12px;
+      background: var(--bg);
+      border-left: 2px solid var(--copper);
+      border-radius: 2px;
+    }
+    .set-status {
+      font-family: var(--mono);
+      font-size: 11px;
+      min-height: 18px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+    }
+    .set-status.ok  { color: var(--ok); }
+    .set-status.err { color: var(--alert); }
     .set-save {
-      width: 100%; padding: 9px; border-radius: 8px; cursor: pointer;
-      background: var(--teal-dim); color: var(--teal-l);
-      border: 1px solid rgba(29,158,117,0.35);
-      font-family: var(--sans); font-size: 13px; transition: all 0.15s;
+      width: 100%;
+      padding: 11px;
+      border-radius: 2px;
+      cursor: pointer;
+      background: var(--copper-dim);
+      color: var(--copper-bright);
+      border: 1px solid var(--border3);
+      font-family: var(--mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 500;
+      transition: all 0.15s;
     }
-    .set-save:hover { background: rgba(29,158,117,0.25); }
+    .set-save:hover {
+      background: rgba(200, 122, 58, 0.22);
+      box-shadow: 0 0 16px rgba(232, 166, 104, 0.15);
+    }
+
+    /* Door state in metric value */
+    .door-state-open  { color: var(--alert) !important; }
+    .door-state-closed { color: var(--ok) !important; }
   </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="topbar-left">
-    <span class="logo">HUE/MOTION</span>
+    <span class="logo">HUE<span class="slash">/</span>MOTION</span>
     <div class="conn-badge" id="conn-badge">
       <span class="conn-dot"></span>
       <span id="conn-label">Verbinde…</span>
@@ -324,6 +895,8 @@
 </div>
 
 <div class="main">
+
+  <div class="section-label">Übersicht</div>
   <div class="metrics">
     <div class="metric">
       <div class="metric-label">Ereignisse heute</div>
@@ -345,11 +918,13 @@
     </div>
   </div>
 
+  <div class="section-label">Sensoren</div>
   <div class="sensors-grid" id="sensors-grid"></div>
 
+  <div class="section-label">Aktivitäts-Heatmap</div>
   <div class="panel" style="margin-bottom:18px;">
     <div class="panel-header">
-      <span class="panel-title">Aktivitäts-Heatmap</span>
+      <span class="panel-title">Bewegung &times; Stunde</span>
       <div class="panel-tabs">
         <button class="tab-btn active" onclick="setHeatRange(this,1)">Heute</button>
         <button class="tab-btn" onclick="setHeatRange(this,7)">7 Tage</button>
@@ -357,14 +932,20 @@
     </div>
     <div class="heatmap-body">
       <div class="hm-grid" id="heatmap"></div>
+      <div class="hm-legend">
+        <span>weniger</span>
+        <div class="hm-legend-cells" id="hm-legend-cells"></div>
+        <span>mehr</span>
+      </div>
     </div>
   </div>
 
-  <div class="panels full">
+  <div class="section-label">Protokoll</div>
+  <div class="panels">
     <div class="panel">
       <div class="panel-header">
-        <span class="panel-title">Garage (Log)</span>
-        <span id="door-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
+        <span class="panel-title">Garage</span>
+        <span id="door-count" style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:0.12em"></span>
       </div>
       <div class="filter-bar" id="door-filter-bar"></div>
       <div class="events-list" id="door-events-list"></div>
@@ -373,8 +954,8 @@
     <div class="panel">
       <div class="panel-header">
         <span class="panel-title">Ereignisse</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span id="event-count" style="font-size:11px;color:var(--muted);font-family:var(--mono)"></span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="event-count" style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:0.12em"></span>
           <button class="tab-btn" id="event-filter-btn" onclick="toggleEventFilter()">Filter</button>
         </div>
       </div>
@@ -424,19 +1005,20 @@ const SUPABASE_URL  = 'https://ebbuvdzgstrhrcsbrlez.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViYnV2ZHpnc3RyaHJjc2JybGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMjc4ODAsImV4cCI6MjA5MTYwMzg4MH0.RyTzHiqV1TPSZtM7lgenBJbUCTjj5fCUhoWauifjlIE';
 
 const SENSORS = {
-  83:  { name: 'Galerie',  room: 'OG', color: '--teal',  hex: '#1D9E75' },
-  57:  { name: 'Haustür',  room: 'EG', color: '--blue',  hex: '#378ADD' },
-  143: { name: 'Keller',   room: 'UG', color: '--amber', hex: '#BA7517' },
-  95:  { name: 'Vorhaus',  room: 'EG', color: '--coral', hex: '#D85A30' },
+  83:  { name: 'Galerie',  room: 'OG', hex: '#E8A668' },  /* bright copper */
+  57:  { name: 'Haustür',  room: 'EG', hex: '#D9B074' },  /* warm brass    */
+  143: { name: 'Keller',   room: 'UG', hex: '#B26A2A' },  /* deep amber    */
+  95:  { name: 'Vorhaus',  room: 'EG', hex: '#C45A2C' },  /* rust copper   */
 };
 
-const HM_STOPS = ['#1e2128','#0a3d28','#0f6e56','#1D9E75','#5DCAA5'];
+/* Copper heatmap ramp: charcoal → ember → bright copper */
+const HM_STOPS = ['#1c1810', '#3a2515', '#7a3f15', '#B26A2A', '#E8A668'];
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let events = [];
 let heatDays = 1;
-const lastState = {};     // sensor_id → letzter presence-Wert
+const lastState = {};
 
 // ── Uhr ──────────────────────────────────────────────────────────────────────
 function updateClock() {
@@ -459,12 +1041,18 @@ function buildSensorCards() {
           <span class="sc-pill idle" id="pill-${id}">ruhig</span>
         </div>
         <div class="sc-last" id="last-${id}"></div>
-        <div class="sc-count" id="count-${id}"><span>0</span> heute</div>
+        <div class="sc-count" id="count-${id}"><span>0</span>heute</div>
         <div class="sparkbar" id="spark-${id}">
-          ${Array(24).fill(`<div class="spark-seg" style="background:var(--surface2);height:3px"></div>`).join('')}
+          ${Array(24).fill(`<div class="spark-seg" style="background:var(--surface2);height:2px"></div>`).join('')}
         </div>
       </div>
     `).join('');
+}
+
+// ── Heatmap-Legende ──────────────────────────────────────────────────────────
+function buildHmLegend() {
+  document.getElementById('hm-legend-cells').innerHTML =
+    HM_STOPS.map(c => `<div class="hm-cell" style="background:${c}"></div>`).join('');
 }
 
 // ── Ereignisse Filter ────────────────────────────────────────────────────────
@@ -515,14 +1103,14 @@ function updateSensorCards() {
     if (latest) {
       const ago = Math.round((now - new Date(latest.created_at)) / 60000);
       const t = new Date(latest.created_at).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' });
-      last.textContent = `Zuletzt: ${t} (vor ${ago < 1 ? '<1' : ago} min)`;
+      last.textContent = `Zuletzt ${t} · vor ${ago < 1 ? '<1' : ago} min`;
     } else {
       last.textContent = 'Keine Daten';
     }
 
-    cnt.innerHTML = `<span>${todayEvts.length}</span> heute`;
+    cnt.innerHTML = `<span>${todayEvts.length}</span>heute`;
 
-    // Sparkline: Bewegungen pro Stunde, letzte 24 Stunden (links = älteste)
+    // Sparkline
     const spark = document.getElementById(`spark-${id}`);
     const segs  = spark.querySelectorAll('.spark-seg');
     const curHour = new Date(); curHour.setMinutes(0,0,0);
@@ -539,11 +1127,13 @@ function updateSensorCards() {
       if (count > 0) {
         seg.style.background = s.hex;
         seg.style.opacity    = '1';
-        seg.style.height     = `${3 + Math.round((count / maxCount) * 25)}px`;
+        seg.style.height     = `${2 + Math.round((count / maxCount) * 26)}px`;
+        seg.style.boxShadow  = `0 0 6px ${s.hex}55`;
       } else {
         seg.style.background = 'var(--surface2)';
         seg.style.opacity    = '1';
-        seg.style.height     = '3px';
+        seg.style.height     = '2px';
+        seg.style.boxShadow  = 'none';
       }
       const h = (curHour.getHours() - (23 - i) + 24) % 24;
       seg.dataset.tip = `${String(h).padStart(2,'0')}:00 — ${count}×`;
@@ -559,13 +1149,11 @@ function updateMetrics() {
 
   document.getElementById('m-today').textContent = todayEvts.length;
 
-  // Aktivster Bereich heute
   const counts = {};
   todayEvts.forEach(e => { counts[e.sensor_id] = (counts[e.sensor_id] || 0) + 1; });
   const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
   document.getElementById('m-top').textContent = top ? SENSORS[top[0]]?.name || '–' : '–';
 
-  // Letzte Bewegung
   const latest = events[0];
   if (latest) {
     const ago = Math.round((now - new Date(latest.created_at)) / 60000);
@@ -595,12 +1183,12 @@ function renderEvents(newId = null) {
     const isNew = newId && e.id === newId && i === 0;
     return `
       <div class="event-row${isNew ? ' new' : ''}">
-        <div class="ev-dot" style="background:${s?.hex || '#888'}"></div>
+        <div class="ev-dot" style="background:${s?.hex || '#888'};color:${s?.hex || '#888'}"></div>
         <span class="ev-time">${t}</span>
         <span class="ev-name">${s?.name || e.sensor_name}</span>
         <span class="ev-room">${s?.room || e.room}</span>
       </div>`;
-  }).join('') || `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Keine Ereignisse</div>`;
+  }).join('') || `<div class="empty-state">Keine Ereignisse</div>`;
 }
 
 // ── Heatmap ───────────────────────────────────────────────────────────────────
@@ -608,7 +1196,6 @@ function renderHeatmap() {
   const since = new Date(Date.now() - heatDays * 86400000);
   const subset = events.filter(e => new Date(e.created_at) >= since);
 
-  // Aggregieren: { sensor_id: [24 Stunden] }
   const data = {};
   Object.keys(SENSORS).forEach(id => { data[id] = Array(24).fill(0); });
   subset.forEach(e => {
@@ -633,7 +1220,7 @@ function renderHeatmap() {
 }
 
 function setHeatRange(btn, days) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel-tabs .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   heatDays = days;
   renderHeatmap();
@@ -654,7 +1241,6 @@ async function loadInitial() {
   if (error) { console.error('Ladefehler:', error); return; }
   events = data || [];
 
-  // Letzten Zustand pro Sensor ermitteln
   const { data: allLast } = await sb
     .from('motion_events')
     .select('sensor_id, presence, created_at')
@@ -677,7 +1263,7 @@ async function loadInitial() {
   renderHeatmap();
 }
 
-// ── Realtime-Subscription mit Auto-Reconnect ─────────────────────────────────
+// ── Realtime ──────────────────────────────────────────────────────────────────
 let rtChannel = null;
 let reconnectTimer = null;
 
@@ -714,8 +1300,6 @@ function handleRealtimeInsert(payload) {
 function setupRealtime() {
   if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
 
-  // Alten Kanal entfernen. Dessen CLOSED-Event darf keinen Reconnect auslösen –
-  // der Status-Callback unten ignoriert daher alles außer dem aktuellen Kanal.
   const old = rtChannel;
   rtChannel = null;
   if (old) sb.removeChannel(old);
@@ -731,7 +1315,7 @@ function setupRealtime() {
   rtChannel = channel;
 
   channel.subscribe(status => {
-    if (rtChannel !== channel) return;   // veralteter Kanal: Status ignorieren
+    if (rtChannel !== channel) return;
     if (status === 'SUBSCRIBED') {
       setConnState('live');
     } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
@@ -747,15 +1331,13 @@ function scheduleReconnect() {
   if (reconnectTimer) return;
   reconnectTimer = setTimeout(async () => {
     reconnectTimer = null;
-    await loadInitial();      // während der Trennung verpasste Events nachladen
+    await loadInitial();
     loadDoorStatus();
     setupRealtime();
   }, 3000);
 }
 
-// Erkennt stillschweigend abgebrochene Verbindungen; Polling sichert frische Daten.
 function setupConnectionWatchdog() {
-  // Tote Verbindung erkennen, die kein CLOSED-Event mehr sendet.
   setInterval(() => {
     if (document.hidden) return;
     const state = rtChannel ? rtChannel.state : 'closed';
@@ -765,7 +1347,6 @@ function setupConnectionWatchdog() {
     }
   }, 15000);
 
-  // Fallback: auch bei totem Realtime regelmäßig nachladen.
   setInterval(() => {
     if (!document.hidden) {
       loadInitial();
@@ -773,7 +1354,6 @@ function setupConnectionWatchdog() {
     }
   }, 60000);
 
-  // Beim Zurückkehren auf den Tab (z.B. iPhone entsperrt) sofort auffrischen.
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     loadInitial();
@@ -787,7 +1367,6 @@ function setupConnectionWatchdog() {
 // ── Türzustände ──────────────────────────────────────────────────────────────
 let doorStatus = {};
 let doorEvents = [];
-
 let activeDoorFilter = 'all';
 
 function buildDoorFilterBar() {
@@ -822,13 +1401,13 @@ function renderDoorPanel() {
   const g = doorStatus['Garage'];
   if (!g) {
     val.textContent = '–';
-    val.style.color = '';
+    val.className = 'metric-value sm';
     sub.textContent = '';
     return;
   }
 
   val.textContent = g.state === 'open' ? 'open' : 'closed';
-  val.style.color = g.state === 'open' ? 'var(--coral-l)' : 'var(--teal-l)';
+  val.className = 'metric-value sm ' + (g.state === 'open' ? 'door-state-open' : 'door-state-closed');
   const time = new Date(g.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
   const d = new Date(g.created_at).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' });
   sub.textContent = `${d} ${time}`;
@@ -842,14 +1421,16 @@ function renderDoorEventsList() {
   document.getElementById('door-count').textContent = `${shown.length}`;
   document.getElementById('door-events-list').innerHTML = shown.map(e => {
     const t = new Date(e.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
+    const isOpen = e.state === 'open';
+    const dotColor = isOpen ? 'var(--alert)' : 'var(--ok)';
     return `
       <div class="event-row">
-        <div class="ev-dot" style="background:${e.state === 'open' ? '#D85A30' : '#1D9E75'}"></div>
+        <div class="ev-dot" style="background:${dotColor};color:${dotColor}"></div>
         <span class="ev-time">${t}</span>
         <span class="ev-name">${e.door_name}</span>
-        <span class="ev-room">${e.state === 'open' ? 'open' : 'closed'}</span>
+        <span class="ev-room state-${e.state}">${e.state}</span>
       </div>`;
-  }).join('') || `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Keine Einträge</div>`;
+  }).join('') || `<div class="empty-state">Keine Einträge</div>`;
 }
 
 async function loadDoorStatus() {
@@ -861,7 +1442,6 @@ async function loadDoorStatus() {
 
   if (evts) {
     doorEvents = evts;
-    // Aktuellen Status pro Tür aus dem neuesten Eintrag ableiten
     doorStatus = {};
     evts.forEach(e => {
       if (!doorStatus[e.door_name]) doorStatus[e.door_name] = e;
@@ -871,7 +1451,7 @@ async function loadDoorStatus() {
   }
 }
 
-// ── Push-Benachrichtigungen (Einstellungen) ──────────────────────────────────
+// ── Push-Benachrichtigungen ──────────────────────────────────────────────────
 let notifySettings = { sensor_config: {} };
 
 function hourOptions(selected) {
@@ -889,8 +1469,8 @@ function renderNotifySensors() {
         <div class="set-sensor-row">
           <div class="set-sensor-left">
             <input type="checkbox" id="snsr-${id}" value="${id}" ${cfg.enabled ? 'checked' : ''}>
-            <span class="set-dot" style="background:${s.hex}"></span>
-            <label for="snsr-${id}" style="font-size:13px;cursor:pointer">${s.name}</label>
+            <span class="set-dot" style="background:${s.hex};color:${s.hex}"></span>
+            <label for="snsr-${id}" style="font-size:13px;cursor:pointer;color:var(--text)">${s.name}</label>
             <span class="set-room">${s.room}</span>
           </div>
           <div class="set-sensor-window">
@@ -953,7 +1533,7 @@ async function saveSettings() {
   }
 }
 
-// ── iOS: Zoom unterbinden (Pinch & Doppeltipp) ───────────────────────────────
+// ── iOS Zoom unterbinden ─────────────────────────────────────────────────────
 ['gesturestart', 'gesturechange', 'gestureend'].forEach(evt =>
   document.addEventListener(evt, e => e.preventDefault())
 );
@@ -963,6 +1543,7 @@ document.addEventListener('touchmove', e => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 buildSensorCards();
+buildHmLegend();
 buildEventFilter();
 buildDoorFilterBar();
 loadNotifySettings();
