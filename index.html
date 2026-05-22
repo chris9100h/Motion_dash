@@ -2052,8 +2052,7 @@ function renderNotifySensors() {
       return `
         <div class="set-sensor-row">
           <div class="set-sensor-left">
-            <input type="checkbox" id="snsr-${id}" value="${id}" ${cfg.enabled ? 'checked' : ''}
-                   onchange="onSensorToggle('${id}', this.checked)">
+            <input type="checkbox" id="snsr-${id}" value="${id}" ${cfg.enabled ? 'checked' : ''}>
             <span class="set-dot" style="background:${s.hex};color:${s.hex}"></span>
             <label for="snsr-${id}" style="font-size:13px;cursor:pointer;color:var(--text)">${s.name}</label>
           </div>
@@ -2099,27 +2098,6 @@ async function logout() {
 
 function closeSettings() {
   document.getElementById('settings-modal').classList.remove('open');
-}
-
-async function onSensorToggle(sensorId, enabled) {
-  if (!enabled) return;
-  const key = (document.getElementById('pushover-key')?.value || '').trim()
-              || notifySettings.pushover_user_key;
-  if (!key) return;
-
-  const s  = SENSORS[sensorId];
-  const ws = parseInt(document.getElementById(`sw-s-${sensorId}`)?.value ?? '0');
-  const we = parseInt(document.getElementById(`sw-e-${sensorId}`)?.value ?? '0');
-  const fmt = h => String(h).padStart(2, '0') + ':00';
-  const window = ws === we ? 'all day' : `${fmt(ws)} – ${fmt(we)}`;
-
-  await sb.functions.invoke('pushover-test', {
-    body: {
-      pushover_user_key: key,
-      title:   `${s.name} · Notifications on`,
-      message: `${s.name} — active ${window}`,
-    },
-  });
 }
 
 async function testPushover() {
@@ -2183,6 +2161,28 @@ async function saveSettings() {
     updateArmedBadge();
     status.classList.add('ok');
     status.textContent = 'SAVED';
+
+    if (pushover_user_key) {
+      const fmt = h => String(h).padStart(2, '0') + ':00';
+      const lines = Object.entries(sensor_config)
+        .filter(([, c]) => c.enabled)
+        .map(([id, c]) => {
+          const name   = SENSORS[id]?.name ?? id;
+          const window = c.window_start === c.window_end
+            ? 'all day'
+            : `${fmt(c.window_start)} – ${fmt(c.window_end)}`;
+          return `${name}: ${window}`;
+        });
+      if (lines.length) {
+        sb.functions.invoke('pushover-test', {
+          body: {
+            pushover_user_key,
+            title:   'Motion · Notifications saved',
+            message: lines.join('\n'),
+          },
+        });
+      }
+    }
   }
 }
 
