@@ -9,45 +9,37 @@ const PUSHOVER_TOKEN = Deno.env.get("PUSHOVER_TOKEN") ?? "";
 const SUPABASE_URL   = Deno.env.get("SUPABASE_URL")   ?? "";
 const SUPABASE_ANON  = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
-Deno.serve(async (req) => {
-  // CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Origin":  "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "authorization, content-type",
-      },
-    });
-  }
+const CORS = {
+  "Access-Control-Allow-Origin":  "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
-  const corsHeaders = { "Access-Control-Allow-Origin": "*" };
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...CORS, "Content-Type": "application/json" },
+  });
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
   try {
-    // Verify user is authenticated
     const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "unauthorized" }),
-        { status: 401, headers: corsHeaders });
-    }
+    if (!authHeader) return json({ error: "unauthorized" }, 401);
+
     const userSb = createClient(SUPABASE_URL, SUPABASE_ANON, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: authError } = await userSb.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "unauthorized" }),
-        { status: 401, headers: corsHeaders });
-    }
+    if (authError || !user) return json({ error: "unauthorized" }, 401);
 
     const { pushover_user_key } = await req.json();
-    if (!pushover_user_key?.trim()) {
-      return new Response(JSON.stringify({ error: "No Pushover user key provided" }),
-        { status: 400, headers: corsHeaders });
-    }
-    if (!PUSHOVER_TOKEN) {
-      return new Response(JSON.stringify({ error: "PUSHOVER_TOKEN secret not set" }),
-        { status: 500, headers: corsHeaders });
-    }
+    if (!pushover_user_key?.trim())
+      return json({ error: "No Pushover user key provided" }, 400);
+    if (!PUSHOVER_TOKEN)
+      return json({ error: "PUSHOVER_TOKEN secret not configured on the server" }, 500);
 
     const res = await fetch("https://api.pushover.net/1/messages.json", {
       method: "POST",
@@ -61,18 +53,12 @@ Deno.serve(async (req) => {
     });
 
     const body = await res.json();
-    if (!res.ok) {
-      return new Response(JSON.stringify({ error: body.errors?.join(", ") ?? "Pushover error" }),
-        { status: 502, headers: corsHeaders });
-    }
+    if (!res.ok)
+      return json({ error: body.errors?.join(", ") ?? "Pushover error" }, 502);
 
-    return new Response(JSON.stringify({ ok: true }),
-      { status: 200, headers: corsHeaders });
+    return json({ ok: true });
 
   } catch (e) {
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : String(e) }),
-      { status: 500, headers: corsHeaders }
-    );
+    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
   }
 });
