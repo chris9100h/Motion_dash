@@ -27,7 +27,6 @@ const CACHE = 'motion-v1.112';
 - Commit-Messages können Deutsch oder Englisch sein
 
 ## Git
-- Feature-Branch: `claude/awesome-fermat-9D8TL`
 - Kein direkter Push auf `main`
 - SW-Bump im selben Commit wie die eigentliche Änderung
 
