@@ -1653,7 +1653,7 @@ function updateMetrics() {
   }
 
   // Heatmap stats
-  const total = events.filter(e => new Date(e.created_at) >= new Date(Date.now() - heatDays * 86400000)).length;
+  const total = events.filter(e => new Date(e.created_at) >= heatSince()).length;
   const hmStats = document.getElementById('hm-stats');
   if (hmStats) {
     hmStats.innerHTML =
@@ -1692,8 +1692,15 @@ function renderEvents(newId = null) {
 }
 
 // ── Heatmap ───────────────────────────────────────────────────────────────────
+function heatSince() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  if (heatDays > 1) d.setDate(d.getDate() - (heatDays - 1));
+  return d;
+}
+
 function renderHeatmap() {
-  const since = new Date(Date.now() - heatDays * 86400000);
+  const since = heatSince();
   const subset = events.filter(e => new Date(e.created_at) >= since);
 
   const data = {};
