@@ -1261,6 +1261,24 @@
       background: rgba(200, 122, 58, 0.22);
       box-shadow: 0 0 18px rgba(240, 173, 110, 0.18);
     }
+    .set-cache-btn {
+      width: 100%;
+      padding: 10px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line2);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      transition: all 0.15s;
+    }
+    .set-cache-btn:hover {
+      color: var(--alert);
+      border-color: rgba(220, 90, 46, 0.35);
+      background: rgba(220, 90, 46, 0.06);
+    }
     .set-test {
       width: 100%;
       padding: 10px;
@@ -1487,6 +1505,10 @@
       </div>
       <div class="set-status" id="set-status"></div>
       <button class="set-save" onclick="saveSettings()">Save</button>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+        <div class="set-label" style="margin-bottom:10px">Wartung</div>
+        <button class="set-cache-btn" onclick="clearCacheAndReload()">Cache leeren &amp; neu laden</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2186,6 +2208,19 @@ async function saveSettings() {
       }
     }
   }
+}
+
+// ── Cache leeren ─────────────────────────────────────────────────────────────
+async function clearCacheAndReload() {
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+  }
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => r.unregister()));
+  }
+  window.location.reload(true);
 }
 
 // ── iOS zoom prevention ──────────────────────────────────────────────────────
