@@ -1493,6 +1493,9 @@
       <button class="modal-close" onclick="closeSettings()" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
+      <div style="padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--line)">
+        <button class="set-cache-btn" onclick="clearCacheAndReload()">Cache leeren &amp; neu laden</button>
+      </div>
       <div class="set-section">
         <div class="set-label">Pushover User Key</div>
         <input type="text" id="pushover-key" class="set-key-input"
@@ -1507,10 +1510,6 @@
       </div>
       <div class="set-status" id="set-status"></div>
       <button class="set-save" onclick="saveSettings()">Save</button>
-      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
-        <div class="set-label" style="margin-bottom:10px">Wartung</div>
-        <button class="set-cache-btn" onclick="clearCacheAndReload()">Cache leeren &amp; neu laden</button>
-      </div>
     </div>
   </div>
 </div>
