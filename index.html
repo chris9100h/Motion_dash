@@ -928,37 +928,158 @@
     }
 
     /* ═══ Responsive ═══════════════════════════════════════════ */
+    /* Tablet — keep protocol 2-col, fold hero */
     @media (max-width: 1100px) {
       .hero { grid-template-columns: 1fr 1fr; }
-      .hero > :nth-child(1) { grid-column: 1 / -1; }
-      .protocol { grid-template-columns: 1fr; }
+      /* Status | Ereignisse heute (default), Garage full row, Timeline already full */
+      .hero > .hero-cell:nth-child(3) { grid-column: 1 / -1; }
     }
+
+    /* Mobile — strict 2-column composition */
     @media (max-width: 760px) {
-      .shell { padding: 0 16px 40px; }
-      .topbar { grid-template-columns: 1fr auto; padding: 14px 0; }
+      .shell { padding: 0 14px 40px; }
+      .topbar { grid-template-columns: 1fr auto; padding: 14px 0; gap: 12px; }
       .tb-c { display: none; }
-      .hero { grid-template-columns: 1fr; }
-      .hero-num { font-size: 64px; }
-      .status-word { font-size: 48px; }
+      #clock { font-size: 10px; }
+
+      /* Hero: Status | Events (2 cols), Garage full, Timeline full */
+      .hero { gap: 8px; margin-top: 18px; }
+      .hero-cell {
+        padding: 32px 14px 16px;
+        min-height: 0;
+      }
+      .hero-label { font-size: 9px; letter-spacing: 0.16em; margin-bottom: 10px; }
+      .hero-num { font-size: 44px; gap: 6px; }
+      .hero-num .small-unit { font-size: 10px; letter-spacing: 0.12em; }
+      .hero-sub { font-size: 11px; margin-top: 10px; }
+      .hero-sub .delta { font-size: 10px; }
+
+      /* Status block */
+      .status-line { gap: 10px; margin-bottom: 10px; }
+      .status-led { width: 10px; height: 10px; }
+      .status-word { font-size: 32px; }
+      .status-meta {
+        font-size: 10px;
+        gap: 6px 14px;
+        margin-top: 8px;
+        flex-direction: column;
+      }
+      .status-meta > * { width: 100%; }
+
+      /* Garage hero in hero row */
+      .hero .garage-state { gap: 12px; margin-bottom: 6px; }
+      .hero .garage-state .word { font-size: 44px; }
+      .hero .garage-state .indicator { width: 12px; height: 12px; }
+      .hero .garage-meta { font-size: 10px; }
+
+      /* Timeline */
+      .timeline-cell { padding: 32px 14px 18px 52px; }
+      .timeline-wrap { height: 84px; margin-top: 10px; }
+      .tl-rowlabel { left: -42px; font-size: 8px; letter-spacing: 0.10em; }
+      .tl-axis { font-size: 8px; margin-top: 10px; }
+      .tl-axis span:nth-child(even) { display: none; }
+
+      /* Sensors — 2 columns of compact cards */
+      .sensor-rail-cell { padding-top: 32px; }
+      .sensor-rail {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+      }
       .sensor-row {
-        grid-template-columns: 12px 1fr 80px;
+        grid-template-columns: 12px 1fr auto;
         grid-template-areas:
           "led name count"
-          ". stats stats";
-        gap: 10px 14px;
-        padding: 16px 18px;
+          "spark spark spark"
+          "last last last";
+        gap: 6px 10px;
+        padding: 14px 14px;
+        border-top: 1px solid var(--line);
       }
-      .sr-id { display: none; }
-      .sr-led { grid-area: led; }
-      .sr-id-info { grid-area: name; }
-      .sr-stats { grid-area: stats; }
-      .sr-count { grid-area: count; }
-      .sr-count .num { font-size: 22px; }
-      .hm-grid { grid-template-columns: 56px repeat(24, 1fr); gap: 2px; }
-      .hm-cell { height: 22px; }
-      .hm-row-label { font-size: 11px; padding-right: 8px; }
-      .hm-col-label { font-size: 7px; }
-      .timeline-cell, .heatmap-cell, .events-cell, .garage-hero { padding-left: 18px; padding-right: 18px; }
+      .sensor-row:nth-child(-n+2) { border-top: none; }
+      .sensor-row:nth-child(2n) { border-left: 1px solid var(--line); }
+      .sensor-row::before {
+        left: 0; top: 0; bottom: auto;
+        height: 2px; width: 100%;
+      }
+      .sensor-row.motion::before {
+        box-shadow: 0 0 12px var(--copper-glow);
+      }
+      .sensor-row .sr-id { display: none; }
+      .sensor-row .sr-led { grid-area: led; width: 10px; height: 10px; margin-top: 4px; }
+      .sensor-row .sr-id-info { grid-area: name; min-width: 0; }
+      .sensor-row .sr-name { font-size: 14px; }
+      .sensor-row .sr-meta { font-size: 9px; gap: 6px; letter-spacing: 0.08em; }
+      .sensor-row .sr-meta .pill { padding: 1px 5px; letter-spacing: 0.12em; }
+      .sensor-row .sr-stats { display: contents; }
+      .sensor-row .sr-spark { grid-area: spark; height: 24px; }
+      .sensor-row .sr-last { grid-area: last; font-size: 8px; letter-spacing: 0.04em; }
+      .sensor-row .sr-count { grid-area: count; flex-direction: column; align-items: flex-end; }
+      .sensor-row .sr-count .num { font-size: 22px; }
+      .sensor-row .sr-count .lbl { font-size: 8px; letter-spacing: 0.12em; }
+
+      /* Heatmap */
+      .heatmap-cell { padding: 52px 14px 18px; }
+      .hm-grid { grid-template-columns: 48px repeat(24, 1fr); gap: 2px; margin-top: 4px; }
+      .hm-cell { height: 22px; border-radius: 1px; }
+      .hm-row-label { font-size: 10px; padding-right: 8px; }
+      .hm-col-label { font-size: 7px; letter-spacing: 0; }
+      .hm-tabs { top: 28px; right: 12px; }
+      .hm-legend { font-size: 8px; gap: 8px; margin-top: 14px; padding-top: 12px; letter-spacing: 0.14em; }
+      .hm-legend-cells .hm-cell { width: 14px; height: 14px; }
+      .hm-stats { gap: 12px; }
+
+      /* Protocol — stays 2-col, columns equal */
+      .protocol {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .garage-hero { padding: 32px 14px 14px; }
+      .garage-hero .garage-state .word { font-size: 32px; }
+      .garage-hero .garage-state .indicator { width: 11px; height: 11px; }
+      .garage-hero .garage-meta { font-size: 10px; }
+      .garage-hero .hero-label { margin-bottom: 6px; }
+
+      .events-cell { min-height: 0; }
+      .events-head { padding: 32px 12px 12px; }
+      .events-head-l { display: none; }
+      .events-head-r { gap: 8px; }
+      .events-head-r .tab-btn { padding: 4px 8px; font-size: 9px; }
+      #event-count, #door-count { font-size: 9px; letter-spacing: 0.08em; }
+
+      .filter-bar { padding: 8px 12px; gap: 3px; }
+      .filter-btn { font-size: 9px; padding: 3px 8px; letter-spacing: 0.10em; }
+
+      .events-list { max-height: 360px; min-height: 0; }
+      .event-row {
+        grid-template-columns: 8px 1fr;
+        grid-template-areas:
+          "dot time"
+          "dot name";
+        gap: 1px 10px;
+        padding: 8px 12px;
+      }
+      .event-row > .ev-dot { grid-area: dot; align-self: center; }
+      .event-row > .ev-time { grid-area: time; font-size: 10px; }
+      .event-row > .ev-name { grid-area: name; font-size: 12px; }
+      .event-row > .ev-room { display: none; }
+
+      .event-filter-panel { padding: 10px 12px; gap: 8px; }
+      .filter-field span { font-size: 8px; }
+
+      /* Corner labels stay subtle */
+      .cell-title { font-size: 8px; letter-spacing: 0.16em; }
+      .cell-coord { font-size: 8px; letter-spacing: 0.14em; top: 10px; left: 12px; }
+    }
+
+    /* Very narrow phones — keep 2-col composition; hide cell-titles to avoid overlap */
+    @media (max-width: 420px) {
+      .hero-cell .cell-title { display: none; }
+      .events-head .cell-title,
+      .garage-hero .cell-title,
+      .sensor-rail-cell .cell-title { display: none; }
+      .heatmap-cell .cell-title { display: none; }
+      .timeline-cell .cell-title { display: none; }
     }
 
     /* ═══ Settings modal ════════════════════════════════════════ */
