@@ -1259,6 +1259,22 @@
       background: rgba(200, 122, 58, 0.22);
       box-shadow: 0 0 18px rgba(240, 173, 110, 0.18);
     }
+    .set-test {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line2);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      transition: all 0.15s;
+    }
+    .set-test:hover:not(:disabled) { color: var(--copper-bright); border-color: var(--line3); }
+    .set-test:disabled { opacity: 0.4; cursor: default; }
     .set-key-input {
       width: 100%;
       box-sizing: border-box;
@@ -1459,6 +1475,7 @@
         <div class="set-label">Pushover User Key</div>
         <input type="text" id="pushover-key" class="set-key-input"
                placeholder="u·················" autocomplete="off" spellcheck="false">
+        <button class="set-test" id="test-btn" onclick="testPushover()">Send test notification</button>
         <div class="set-hint">Your personal key from pushover.net — not the app token.</div>
       </div>
       <div class="set-section">
@@ -2081,6 +2098,38 @@ async function logout() {
 
 function closeSettings() {
   document.getElementById('settings-modal').classList.remove('open');
+}
+
+async function testPushover() {
+  const key    = document.getElementById('pushover-key')?.value?.trim();
+  const btn    = document.getElementById('test-btn');
+  const status = document.getElementById('set-status');
+
+  if (!key) {
+    status.className = 'set-status err';
+    status.textContent = 'Enter your Pushover user key first';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  status.className = 'set-status';
+  status.textContent = '';
+
+  const { data, error } = await sb.functions.invoke('pushover-test', {
+    body: { pushover_user_key: key },
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Send test notification';
+
+  if (error || data?.error) {
+    status.className = 'set-status err';
+    status.textContent = 'ERROR: ' + (data?.error ?? error?.message);
+  } else {
+    status.className = 'set-status ok';
+    status.textContent = 'Test sent — check your phone';
+  }
 }
 
 async function saveSettings() {
