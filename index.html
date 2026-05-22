@@ -1274,7 +1274,7 @@
       </div>
       <div class="status-meta">
         <span><b id="active-count">0</b>/4 sensors active</span>
-        <span>Last motion <b id="m-last">–</b></span>
+        <span>Last <b id="m-last">–</b></span>
         <span id="m-last-room"></span>
       </div>
     </div>
@@ -1427,10 +1427,10 @@ const SUPABASE_URL  = 'https://ebbuvdzgstrhrcsbrlez.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViYnV2ZHpnc3RyaHJjc2JybGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMjc4ODAsImV4cCI6MjA5MTYwMzg4MH0.RyTzHiqV1TPSZtM7lgenBJbUCTjj5fCUhoWauifjlIE';
 
 const SENSORS = {
-  83:  { name: 'Gallery',    room: 'OG', hex: '#F0AD6E' },
-  57:  { name: 'Front Door', room: 'EG', hex: '#E0C088' },
-  143: { name: 'Basement',   room: 'UG', hex: '#B5731F' },
-  95:  { name: 'Hallway',    room: 'EG', hex: '#D85F2E' },
+  83:  { name: 'Galerie',  hex: '#F0AD6E' },
+  57:  { name: 'Haustür',  hex: '#E0C088' },
+  143: { name: 'Keller',   hex: '#B5731F' },
+  95:  { name: 'Vorhaus',  hex: '#D85F2E' },
 };
 
 const HM_STOPS = ['#181519', '#3a2515', '#7a3f15', '#B5731F', '#F0AD6E'];
@@ -1505,7 +1505,6 @@ function buildSensorCards() {
         <div class="sr-id-info">
           <div class="sr-name">${s.name}</div>
           <div class="sr-meta">
-            <span class="pill">${s.room}</span>
             <span id="pill-${id}">IDLE</span>
           </div>
         </div>
@@ -1535,7 +1534,7 @@ function buildEventFilter() {
   if (!sel) return;
   sel.innerHTML = `<option value="all">All</option>` +
     Object.entries(SENSORS).map(([id, s]) =>
-      `<option value="${id}">${s.name} (${s.room})</option>`
+      `<option value="${id}">${s.name}</option>`
     ).join('');
 }
 
@@ -1579,7 +1578,7 @@ function updateSensorCards() {
     if (latest) {
       const ago = Math.round((now - new Date(latest.created_at)) / 60000);
       const t = new Date(latest.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-      last.textContent = `LAST MOTION · ${t} · ${ago < 1 ? '<1' : ago} MIN AGO`;
+      last.textContent = `LAST · ${t} · ${ago < 1 ? '<1' : ago} MIN AGO`;
     } else {
       last.textContent = 'NO DATA';
     }
@@ -1686,7 +1685,6 @@ function renderEvents(newId = null) {
         <div class="ev-dot" style="background:${s?.hex || '#888'};color:${s?.hex || '#888'}"></div>
         <span class="ev-time">${t}</span>
         <span class="ev-name">${s?.name || e.sensor_name}</span>
-        <span class="ev-room">${s?.room || e.room}</span>
       </div>`;
   }).join('') || `<div class="empty-state">No events</div>`;
 }
@@ -1988,7 +1986,6 @@ function renderNotifySensors() {
             <input type="checkbox" id="snsr-${id}" value="${id}" ${cfg.enabled ? 'checked' : ''}>
             <span class="set-dot" style="background:${s.hex};color:${s.hex}"></span>
             <label for="snsr-${id}" style="font-size:13px;cursor:pointer;color:var(--text)">${s.name}</label>
-            <span class="set-room">${s.room}</span>
           </div>
           <div class="set-sensor-window">
             from <select id="sw-s-${id}">${hourOptions(cfg.window_start)}</select>
