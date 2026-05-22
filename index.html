@@ -6,47 +6,48 @@
   <title>Bewegungsübersicht</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Warm near-blacks */
-      --bg:        #0b0907;
-      --bg-deep:   #050403;
-      --surface:   #131009;
-      --surface2:  #1c1810;
-      --surface3:  #261f15;
+      /* Black & warm umbra */
+      --bg:        #08070a;
+      --bg-deep:   #030203;
+      --surface:   #0f0d10;
+      --surface2:  #181519;
+      --surface3:  #221d22;
 
       /* Copper-tinted lines */
-      --border:    rgba(200, 122, 58, 0.10);
-      --border2:   rgba(200, 122, 58, 0.22);
-      --border3:   rgba(200, 122, 58, 0.40);
+      --line:      rgba(200, 122, 58, 0.08);
+      --line2:     rgba(200, 122, 58, 0.18);
+      --line3:     rgba(200, 122, 58, 0.36);
+      --line-soft: rgba(255, 240, 220, 0.04);
 
       /* Type */
-      --text:      #ede2d1;
+      --text:      #f0e6d6;
       --text-dim:  #b8a892;
-      --muted:     #7a6a55;
-      --muted2:    #574b3c;
+      --muted:     #756554;
+      --muted2:    #4a4035;
 
       --mono:      'IBM Plex Mono', ui-monospace, monospace;
       --sans:      'IBM Plex Sans', -apple-system, sans-serif;
+      --display:   'Fraunces', Georgia, serif;
 
       /* Copper palette */
       --copper:        #C87A3A;
-      --copper-bright: #E8A668;
-      --copper-deep:   #8C4E1E;
-      --copper-dim:    rgba(200, 122, 58, 0.14);
-      --copper-glow:   rgba(232, 166, 104, 0.45);
+      --copper-bright: #F0AD6E;
+      --copper-deep:   #7C4318;
+      --copper-dim:    rgba(200, 122, 58, 0.12);
+      --copper-glow:   rgba(240, 173, 110, 0.55);
 
       /* Per-sensor copper shifts */
-      --s-galerie:  #E8A668;  /* bright copper */
-      --s-haustur:  #D9B074;  /* warm brass */
-      --s-keller:   #B26A2A;  /* deep amber */
-      --s-vorhaus:  #C45A2C;  /* rust copper */
+      --s-galerie:  #F0AD6E;
+      --s-haustur:  #E0C088;
+      --s-keller:   #B5731F;
+      --s-vorhaus:  #D85F2E;
 
-      /* Semantic */
       --ok:        #9CB070;
       --warn:      #E8A668;
-      --alert:     #D8633A;
+      --alert:     #DC5A2E;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -54,8 +55,8 @@
     body {
       background: var(--bg);
       background-image:
-        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(200, 122, 58, 0.06), transparent 60%),
-        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(232, 166, 104, 0.04), transparent 60%);
+        radial-gradient(ellipse 100% 60% at 50% -10%, rgba(200, 122, 58, 0.07), transparent 70%),
+        radial-gradient(ellipse 80% 40% at 0% 100%, rgba(124, 67, 24, 0.04), transparent 60%);
       color: var(--text);
       font-family: var(--sans);
       font-size: 14px;
@@ -64,600 +65,842 @@
       touch-action: manipulation;
       -webkit-text-size-adjust: 100%;
       -webkit-font-smoothing: antialiased;
+      letter-spacing: 0;
     }
 
-    /* ── Topbar ── */
+    /* Subtle hairline grid texture overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 70% 70% at 50% 30%, black 30%, transparent 90%);
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    /* ═══ Layout shell ═══════════════════════════════════════════ */
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 32px 64px;
+    }
+
+    /* ═══ Topbar ═══════════════════════════════════════════════ */
     .topbar {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
-      padding: 14px 28px;
-      border-bottom: 1px solid var(--border);
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
       position: sticky;
       top: 0;
-      background: rgba(11, 9, 7, 0.85);
-      backdrop-filter: blur(12px) saturate(140%);
-      -webkit-backdrop-filter: blur(12px) saturate(140%);
-      z-index: 20;
+      background: rgba(8, 7, 10, 0.82);
+      backdrop-filter: blur(14px) saturate(160%);
+      -webkit-backdrop-filter: blur(14px) saturate(160%);
+      z-index: 30;
+      margin-bottom: 0;
     }
-    .topbar-left { display: flex; align-items: center; gap: 18px; }
+    .tb-l { display: flex; align-items: center; gap: 22px; }
+    .tb-c {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+    .tb-r {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: flex-end;
+    }
     .logo {
       font-family: var(--mono);
       font-size: 12px;
       font-weight: 600;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.22em;
       color: var(--copper-bright);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
     .logo::before {
       content: "";
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       background: var(--copper);
-      box-shadow: 0 0 12px var(--copper-glow);
-      border-radius: 1px;
+      box-shadow: 0 0 14px var(--copper-glow);
       transform: rotate(45deg);
     }
     .logo .slash { color: var(--muted2); font-weight: 400; }
     .conn-badge {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
       font-size: 10px;
       font-family: var(--mono);
-      letter-spacing: 0.12em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      padding: 4px 11px 4px 10px;
-      border-radius: 2px;
+      padding: 5px 11px 5px 10px;
       color: var(--muted);
+      border: 1px solid var(--line);
       transition: all 0.3s;
     }
     .conn-badge.live {
       color: var(--copper-bright);
-      border-color: var(--border3);
+      border-color: var(--line3);
       background: var(--copper-dim);
     }
     .conn-dot {
-      width: 6px;
-      height: 6px;
+      width: 6px; height: 6px;
       border-radius: 50%;
       background: currentColor;
-      box-shadow: 0 0 0 0 currentColor;
     }
     .conn-badge.live .conn-dot { animation: pulse 1.8s ease-out infinite; }
     @keyframes pulse {
       0%   { box-shadow: 0 0 0 0 var(--copper-glow); }
-      70%  { box-shadow: 0 0 0 6px rgba(232,166,104,0); }
-      100% { box-shadow: 0 0 0 0 rgba(232,166,104,0); }
+      70%  { box-shadow: 0 0 0 8px rgba(240,173,110,0); }
+      100% { box-shadow: 0 0 0 0 rgba(240,173,110,0); }
     }
-
-    .topbar-right {
+    #clock {
       font-family: var(--mono);
       font-size: 11px;
       color: var(--text-dim);
-      letter-spacing: 0.04em;
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      letter-spacing: 0.10em;
+      font-variant-numeric: tabular-nums;
     }
     .icon-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border-radius: 4px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px;
       background: var(--surface2);
-      border: 1px solid var(--border);
+      border: 1px solid var(--line);
       color: var(--muted);
       cursor: pointer;
       transition: all 0.18s;
     }
     .icon-btn:hover {
       color: var(--copper-bright);
-      border-color: var(--border2);
+      border-color: var(--line2);
       background: var(--surface3);
     }
     .icon-btn.armed {
       color: var(--copper-bright);
-      border-color: var(--border3);
+      border-color: var(--line3);
       background: var(--copper-dim);
-      box-shadow: 0 0 12px rgba(232, 166, 104, 0.15) inset;
+      box-shadow: 0 0 18px rgba(240, 173, 110, 0.18) inset;
     }
 
-    /* ── Layout ── */
-    .main {
-      padding: 24px 28px 56px;
-      max-width: 1320px;
-      margin: 0 auto;
+    /* ═══ Cell scaffolding (engineering grid) ═══════════════════ */
+    .cell {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .cell-coord {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .cell-title {
+      position: absolute;
+      top: 11px;
+      right: 14px;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.20em;
+      color: var(--text-dim);
+      text-transform: uppercase;
     }
 
-    /* Section labels */
-    .section-label {
+    /* Crosshair / registration marks at corners */
+    .cell::before,
+    .cell::after {
+      content: "";
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      border-color: var(--line3);
+      pointer-events: none;
+    }
+    .cell::before {
+      top: -1px; left: -1px;
+      border-top: 1px solid var(--line3);
+      border-left: 1px solid var(--line3);
+    }
+    .cell::after {
+      bottom: -1px; right: -1px;
+      border-bottom: 1px solid var(--line3);
+      border-right: 1px solid var(--line3);
+    }
+
+    /* ═══ Hero row ═══════════════════════════════════════════════ */
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 14px;
+      margin-top: 28px;
+    }
+    .hero-cell { padding: 44px 28px 24px; min-height: 200px; }
+    .hero-num {
+      font-family: var(--mono);
+      font-weight: 400;
+      font-size: 88px;
+      line-height: 0.9;
+      color: var(--text);
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .hero-num .accent { color: var(--copper-bright); }
+    .hero-num .small-unit {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--muted);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+    .hero-label {
       font-family: var(--mono);
       font-size: 10px;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.18em;
-      margin: 26px 0 10px;
+      letter-spacing: 0.20em;
+      margin-bottom: 18px;
+    }
+    .hero-sub {
+      font-family: var(--sans);
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 14px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .section-label::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(to right, var(--border2), transparent);
+    .hero-sub .delta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--copper-bright);
+      letter-spacing: 0.06em;
     }
-    .section-label:first-child { margin-top: 0; }
 
-    /* ── Metrics ── */
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 18px;
+    /* Status hero (left) */
+    .status-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
     }
-    .metric {
-      background: var(--surface);
-      padding: 18px 20px;
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .status-led {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 14px var(--ok), 0 0 0 1px rgba(0,0,0,0.4) inset;
+    }
+    .status-led.alert {
+      background: var(--copper-bright);
+      box-shadow: 0 0 18px var(--copper-glow), 0 0 0 1px rgba(0,0,0,0.4) inset;
+      animation: pulse-led 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-led {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+    .status-word {
+      font-family: var(--display);
+      font-weight: 300;
+      font-size: 64px;
+      line-height: 1;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      font-style: italic;
+    }
+    .status-word.alert { color: var(--copper-bright); }
+
+    .status-meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.10em;
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+    .status-meta b {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ═══ 24h Timeline (hero band) ═══════════════════════════════ */
+    .timeline-cell {
+      grid-column: 1 / -1;
+      padding: 38px 28px 22px 70px;
+      margin-top: 14px;
+    }
+    .timeline-wrap {
       position: relative;
+      height: 112px;
+      margin-top: 14px;
     }
-    .metric-label {
+    .tl-track {
+      position: absolute;
+      inset: 8px 0 8px 0;
+      border-top: 1px dashed var(--line2);
+      border-bottom: 1px dashed var(--line2);
+    }
+    .tl-axis {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 14px;
       font-family: var(--mono);
       font-size: 9px;
       color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      margin-bottom: 10px;
+      letter-spacing: 0.10em;
     }
-    .metric-value {
+    .tl-now {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: var(--copper-bright);
+      box-shadow: 0 0 8px var(--copper-glow);
+      z-index: 3;
+      pointer-events: none;
+    }
+    .tl-now::before {
+      content: "NOW";
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
       font-family: var(--mono);
-      font-size: 34px;
-      font-weight: 500;
-      color: var(--text);
-      line-height: 1;
-      letter-spacing: -0.02em;
+      font-size: 8px;
+      color: var(--copper-bright);
+      letter-spacing: 0.20em;
+      white-space: nowrap;
     }
-    .metric-value.sm {
-      font-size: 19px;
-      font-weight: 500;
-      padding-top: 6px;
-      letter-spacing: 0;
+    .tl-event {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      box-shadow: 0 0 6px currentColor;
+      pointer-events: none;
     }
-    .metric-sub {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 5px;
-      letter-spacing: 0.04em;
-    }
-    .metric:first-child .metric-value { color: var(--copper-bright); }
-
-    /* ── Sensor cards ── */
-    .sensors-grid {
+    .tl-rows {
+      position: absolute;
+      inset: 8px 0 8px 0;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 6px;
+      grid-template-rows: repeat(4, 1fr);
     }
-    .sensor-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 14px 16px 12px;
-      transition: border-color 0.4s, box-shadow 0.4s, background 0.4s;
+    .tl-row {
       position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .tl-row + .tl-row {
+      border-top: 1px dashed rgba(200, 122, 58, 0.08);
+    }
+    .tl-rowlabel {
+      position: absolute;
+      left: -56px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ═══ Sensor rail ═══════════════════════════════════════════ */
+    .section {
+      margin-top: 18px;
+    }
+    .sensor-rail-cell {
+      padding: 38px 0 0;
       overflow: hidden;
     }
-    .sensor-card::before {
-      content: '';
+    .sensor-rail {
+      display: flex;
+      flex-direction: column;
+    }
+    .sensor-row {
+      display: grid;
+      grid-template-columns: 60px 16px 1fr 1.8fr 90px;
+      gap: 20px;
+      align-items: center;
+      padding: 22px 28px;
+      border-top: 1px solid var(--line);
+      transition: background 0.3s;
+      position: relative;
+    }
+    .sensor-row::before {
+      content: "";
       position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
       background: transparent;
-      transition: background 0.4s, box-shadow 0.4s;
+      transition: background 0.3s, box-shadow 0.3s;
     }
-    .sensor-card.motion {
-      border-color: var(--border3);
-      background: linear-gradient(180deg, rgba(200, 122, 58, 0.04), var(--surface));
+    .sensor-row.motion {
+      background: linear-gradient(90deg, rgba(200,122,58,0.06), transparent 50%);
     }
-    .sensor-card.motion::before {
+    .sensor-row.motion::before {
       background: var(--copper);
-      box-shadow: 0 0 16px var(--copper-glow);
+      box-shadow: 0 0 18px var(--copper-glow);
+    }
+    .sr-id {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.10em;
+      text-align: left;
+    }
+    .sr-id .hash { color: var(--muted2); }
+
+    .sr-led {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--surface3);
+      border: 1px solid var(--line2);
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+    .sensor-row.motion .sr-led {
+      background: var(--copper-bright);
+      border-color: var(--copper-bright);
+      box-shadow: 0 0 14px var(--copper-glow);
+      animation: pulse-led 1.4s ease-in-out infinite;
     }
 
-    .sc-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 12px;
-      gap: 8px;
-    }
-    .sc-name {
-      font-size: 15px;
-      font-weight: 500;
+    .sr-id-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .sr-name {
+      font-family: var(--sans);
+      font-size: 17px;
+      font-weight: 400;
       color: var(--text);
       letter-spacing: -0.005em;
     }
-    .sc-meta {
+    .sr-meta {
+      font-family: var(--mono);
       font-size: 10px;
       color: var(--muted);
-      margin-top: 2px;
-      font-family: var(--mono);
-      letter-spacing: 0.06em;
+      letter-spacing: 0.10em;
+      display: flex;
+      gap: 10px;
     }
-    .sc-pill {
-      font-size: 9px;
-      padding: 3px 9px;
-      border-radius: 2px;
-      font-family: var(--mono);
-      font-weight: 500;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      border: 1px solid transparent;
-      transition: all 0.3s;
-      white-space: nowrap;
-    }
-    .sc-pill.idle {
-      background: var(--surface2);
-      color: var(--muted);
-      border-color: var(--border);
-    }
-    .sc-pill.active {
-      background: var(--copper-dim);
-      color: var(--copper-bright);
-      border-color: var(--border3);
-      box-shadow: 0 0 12px rgba(232, 166, 104, 0.18);
-    }
-    .sc-last {
-      font-size: 11px;
+    .sr-meta .pill {
+      padding: 1px 7px;
+      border: 1px solid var(--line);
       color: var(--text-dim);
-      margin-bottom: 8px;
-      min-height: 16px;
-      font-family: var(--mono);
-      letter-spacing: 0.02em;
-    }
-    .sc-count {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-    }
-    .sc-count span {
-      color: var(--text);
-      font-size: 14px;
-      font-weight: 500;
-      letter-spacing: -0.01em;
-      margin-right: 4px;
+      letter-spacing: 0.14em;
     }
 
-    /* Sparkline */
-    .sparkbar {
+    .sr-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+    .sr-last {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .sr-spark {
       display: flex;
       gap: 2px;
       align-items: flex-end;
-      height: 30px;
-      margin-top: 12px;
-      padding-top: 4px;
-      border-top: 1px dashed var(--border);
+      height: 32px;
     }
-    .spark-seg {
+    .sr-spark .spark-seg {
       flex: 1;
       border-radius: 1px;
-      transition: all 0.4s;
       min-height: 2px;
+      background: var(--surface2);
+      transition: all 0.4s;
       position: relative;
     }
-    .spark-seg:hover::after {
+    .sr-spark .spark-seg:hover::after {
       content: attr(data-tip);
       position: absolute;
       bottom: calc(100% + 6px);
       left: 50%;
       transform: translateX(-50%);
       background: var(--bg-deep);
-      border: 1px solid var(--border3);
+      border: 1px solid var(--line3);
       color: var(--copper-bright);
       font-size: 10px;
       font-family: var(--mono);
       padding: 4px 8px;
-      border-radius: 2px;
       white-space: nowrap;
       pointer-events: none;
       z-index: 10;
       letter-spacing: 0.04em;
     }
 
-    /* ── Main panels ── */
-    .panels {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-      background: linear-gradient(180deg, var(--surface2), var(--surface));
-    }
-    .panel-title {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text);
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
+    .sr-count {
+      text-align: right;
       font-family: var(--mono);
       display: flex;
-      align-items: center;
-      gap: 8px;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
     }
-    .panel-title::before {
-      content: "";
-      width: 4px;
-      height: 4px;
-      background: var(--copper);
-      border-radius: 50%;
-      box-shadow: 0 0 6px var(--copper-glow);
+    .sr-count .num {
+      font-size: 28px;
+      color: var(--text);
+      line-height: 1;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
     }
-    .panel-tabs { display: flex; gap: 2px; }
+    .sensor-row.motion .sr-count .num { color: var(--copper-bright); }
+    .sr-count .lbl {
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    /* ═══ Heatmap cell ═══════════════════════════════════════════ */
+    .heatmap-cell {
+      padding: 56px 28px 24px;
+    }
+    .hm-tabs {
+      position: absolute;
+      top: 32px; right: 16px;
+      display: flex;
+      gap: 2px;
+      z-index: 2;
+    }
     .tab-btn {
       font-family: var(--mono);
       font-size: 10px;
-      padding: 4px 11px;
-      border-radius: 2px;
+      padding: 5px 12px;
       cursor: pointer;
       background: transparent;
       color: var(--muted);
       border: 1px solid transparent;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       transition: all 0.15s;
     }
     .tab-btn:hover { color: var(--text-dim); }
     .tab-btn.active {
       background: var(--copper-dim);
       color: var(--copper-bright);
-      border-color: var(--border3);
+      border-color: var(--line3);
     }
 
-    /* Heatmap */
-    .heatmap-body {
-      padding: 18px 20px 20px;
-      overflow-x: auto;
-    }
     .hm-grid {
       display: grid;
-      grid-template-columns: 72px repeat(24, 1fr);
+      grid-template-columns: 80px repeat(24, 1fr);
       gap: 3px;
       align-items: center;
-      min-width: 520px;
+      margin-top: 8px;
     }
     .hm-row-label {
-      font-size: 11px;
+      font-family: var(--sans);
+      font-size: 12px;
       color: var(--text-dim);
       text-align: right;
-      padding-right: 10px;
+      padding-right: 14px;
       white-space: nowrap;
       font-weight: 400;
     }
     .hm-col-label {
+      font-family: var(--mono);
       font-size: 9px;
       color: var(--muted);
       text-align: center;
-      font-family: var(--mono);
       letter-spacing: 0.04em;
     }
     .hm-cell {
-      height: 26px;
-      border-radius: 2px;
+      height: 36px;
       background: var(--surface2);
       cursor: default;
       transition: background 0.3s, transform 0.15s;
       position: relative;
+      border-radius: 2px;
     }
     .hm-cell:hover {
-      transform: scale(1.08);
+      transform: scale(1.06);
       z-index: 5;
+      outline: 1px solid var(--copper-bright);
     }
     .hm-cell:hover::after {
       content: attr(data-tip);
       position: absolute;
-      bottom: calc(100% + 6px);
+      bottom: calc(100% + 8px);
       left: 50%;
       transform: translateX(-50%);
       background: var(--bg-deep);
-      border: 1px solid var(--border3);
+      border: 1px solid var(--line3);
       color: var(--copper-bright);
       font-size: 10px;
       font-family: var(--mono);
       padding: 4px 8px;
-      border-radius: 2px;
       white-space: nowrap;
       pointer-events: none;
       z-index: 10;
       letter-spacing: 0.04em;
+      border-radius: 2px;
     }
 
-    /* Heatmap legend */
     .hm-legend {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-top: 14px;
+      gap: 10px;
+      margin-top: 18px;
       padding-top: 14px;
-      border-top: 1px dashed var(--border);
+      border-top: 1px dashed var(--line);
       font-family: var(--mono);
       font-size: 9px;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.18em;
     }
     .hm-legend-cells { display: flex; gap: 2px; }
-    .hm-legend-cells .hm-cell { width: 14px; height: 14px; }
+    .hm-legend-cells .hm-cell { width: 18px; height: 18px; }
+    .hm-stats {
+      margin-left: auto;
+      display: flex;
+      gap: 18px;
+    }
+    .hm-stats span b {
+      color: var(--text);
+      font-weight: 500;
+    }
 
-    /* Events / Door panels */
+    /* ═══ Bottom protocol panels ═══════════════════════════════ */
+    .protocol {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr;
+      gap: 14px;
+    }
+    .panel { display: flex; flex-direction: column; }
+    .panel-body { display: flex; flex-direction: column; flex: 1; }
+
+    /* Garage state hero */
+    .garage-hero {
+      padding: 38px 28px 22px;
+    }
+    .garage-state {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .garage-state .word {
+      font-family: var(--display);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 56px;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .garage-state .word.closed { color: var(--ok); }
+    .garage-state .word.open { color: var(--alert); }
+    .garage-state .word.unknown { color: var(--muted); }
+    .garage-state .indicator {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.5) inset;
+    }
+    .garage-state .indicator.closed { background: var(--ok); box-shadow: 0 0 14px var(--ok), 0 0 0 1px rgba(0,0,0,0.5) inset; }
+    .garage-state .indicator.open { background: var(--alert); box-shadow: 0 0 14px var(--alert), 0 0 0 1px rgba(0,0,0,0.5) inset; }
+    .garage-meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+    }
+    .garage-meta b { color: var(--text); font-weight: 500; }
+
     .filter-bar {
       display: flex;
       gap: 4px;
-      padding: 10px 16px;
-      border-bottom: 1px solid var(--border);
+      padding: 10px 22px;
+      border-top: 1px solid var(--line);
       flex-wrap: wrap;
       flex-shrink: 0;
-      background: var(--bg);
     }
     .filter-btn {
       font-family: var(--mono);
       font-size: 10px;
       padding: 4px 11px;
-      border-radius: 2px;
       cursor: pointer;
       background: transparent;
       color: var(--muted);
-      border: 1px solid var(--border);
+      border: 1px solid var(--line);
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       transition: all 0.15s;
     }
-    .filter-btn:hover { color: var(--text-dim); border-color: var(--border2); }
+    .filter-btn:hover { color: var(--text-dim); border-color: var(--line2); }
     .filter-btn.active {
       background: var(--copper-dim);
       color: var(--copper-bright);
-      border-color: var(--border3);
+      border-color: var(--line3);
     }
+
+    /* Events panel header */
+    .events-cell {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 380px;
+    }
+    .events-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 38px 22px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .events-head-l {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+    }
+    .events-head-r {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    #event-count, #door-count {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    #event-count::before { content: "n="; color: var(--muted2); }
+    #door-count::before { content: "n="; color: var(--muted2); }
 
     .events-list {
       overflow-y: auto;
       flex: 1;
-      max-height: 480px;
-      min-height: 280px;
+      max-height: 460px;
     }
     .events-list::-webkit-scrollbar { width: 4px; }
-    .events-list::-webkit-scrollbar-track { background: transparent; }
-    .events-list::-webkit-scrollbar-thumb {
-      background: var(--border3);
-      border-radius: 2px;
-    }
+    .events-list::-webkit-scrollbar-thumb { background: var(--line3); border-radius: 2px; }
     .events-list::-webkit-scrollbar-thumb:hover { background: var(--copper); }
 
     .event-row {
       display: grid;
-      grid-template-columns: 12px 60px 1fr auto;
+      grid-template-columns: 10px 70px 1fr auto;
+      gap: 14px;
       align-items: center;
-      gap: 12px;
-      padding: 10px 18px;
-      border-bottom: 1px solid var(--border);
+      padding: 11px 22px;
+      border-bottom: 1px solid var(--line);
       transition: background 0.12s;
-      cursor: default;
     }
     .event-row:hover { background: var(--surface2); }
     .event-row:last-child { border-bottom: none; }
-    .event-row.new { animation: flash 0.8s ease-out; }
+    .event-row.new { animation: flash 0.9s ease-out; }
     @keyframes flash {
-      0%   { background: rgba(232, 166, 104, 0.18); }
+      0%   { background: rgba(240, 173, 110, 0.18); }
       100% { background: transparent; }
     }
-
     .ev-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
+      width: 6px; height: 6px; border-radius: 50%;
       box-shadow: 0 0 6px currentColor;
     }
     .ev-time {
       font-family: var(--mono);
       font-size: 11px;
       color: var(--muted);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
+      font-variant-numeric: tabular-nums;
     }
     .ev-name {
       font-size: 13px;
       color: var(--text);
-      font-weight: 400;
     }
     .ev-room {
-      font-size: 9px;
       font-family: var(--mono);
+      font-size: 9px;
       padding: 2px 7px;
-      border-radius: 2px;
-      background: transparent;
       color: var(--muted);
-      border: 1px solid var(--border);
+      border: 1px solid var(--line);
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
     }
     .ev-room.state-open {
       color: var(--alert);
-      border-color: rgba(216, 99, 58, 0.35);
-      background: rgba(216, 99, 58, 0.08);
+      border-color: rgba(220, 90, 46, 0.35);
+      background: rgba(220, 90, 46, 0.08);
     }
     .ev-room.state-closed {
       color: var(--ok);
-      border-color: rgba(156, 176, 112, 0.30);
+      border-color: rgba(156, 176, 112, 0.32);
       background: rgba(156, 176, 112, 0.06);
     }
 
     /* Event filter dropdown */
     .event-filter-panel {
       display: none;
-      padding: 12px 16px;
+      padding: 12px 22px;
       gap: 12px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--line);
       flex-wrap: wrap;
       align-items: flex-end;
-      background: var(--bg);
+      background: var(--bg-deep);
     }
     .event-filter-panel.open { display: flex; }
-    .filter-field {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
+    .filter-field { display: flex; flex-direction: column; gap: 5px; }
     .filter-field span {
       font-family: var(--mono);
       font-size: 9px;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.16em;
     }
     .filter-field select,
     .filter-field input[type=datetime-local] {
       background: var(--surface2);
       color: var(--text);
-      border: 1px solid var(--border2);
+      border: 1px solid var(--line2);
       border-radius: 2px;
-      padding: 6px 9px;
+      padding: 6px 10px;
       font-family: var(--mono);
       font-size: 11px;
       outline: none;
       transition: border-color 0.15s;
     }
     .filter-field select:focus,
-    .filter-field input[type=datetime-local]:focus {
-      border-color: var(--border3);
-    }
+    .filter-field input[type=datetime-local]:focus { border-color: var(--line3); }
     .filter-field input[type=datetime-local]::-webkit-calendar-picker-indicator {
       filter: invert(0.5) sepia(1) saturate(2) hue-rotate(-10deg);
     }
@@ -670,8 +913,7 @@
       cursor: pointer;
       padding: 0 0 7px;
       text-transform: uppercase;
-      letter-spacing: 0.14em;
-      align-self: flex-end;
+      letter-spacing: 0.16em;
     }
     .filter-reset:hover { color: var(--copper-bright); }
 
@@ -681,47 +923,49 @@
       color: var(--muted);
       font-family: var(--mono);
       font-size: 11px;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.10em;
       text-transform: uppercase;
     }
 
-    /* ── Responsive ── */
-    @media (max-width: 1024px) {
-      .panels { grid-template-columns: 1fr; }
-      .sensors-grid { grid-template-columns: repeat(2, 1fr); }
+    /* ═══ Responsive ═══════════════════════════════════════════ */
+    @media (max-width: 1100px) {
+      .hero { grid-template-columns: 1fr 1fr; }
+      .hero > :nth-child(1) { grid-column: 1 / -1; }
+      .protocol { grid-template-columns: 1fr; }
     }
-    @media (max-width: 800px) {
-      .metrics { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 500px) {
-      .main { padding: 16px 14px 36px; }
-      .topbar { padding: 12px 16px; }
-      .metrics, .sensors-grid { grid-template-columns: 1fr 1fr; }
-      .metric { padding: 14px 14px; }
-      .metric-value { font-size: 26px; }
-      .metric-value.sm { font-size: 16px; }
-      .event-row { grid-template-columns: 10px 52px 1fr auto; gap: 8px; padding: 9px 14px; }
-      .ev-name { font-size: 12px; }
-    }
-    @media (max-width: 640px) {
-      .heatmap-body { padding: 14px 10px 16px; }
-      .hm-grid {
-        grid-template-columns: 50px repeat(24, 1fr);
-        gap: 2px;
-        min-width: 0;
+    @media (max-width: 760px) {
+      .shell { padding: 0 16px 40px; }
+      .topbar { grid-template-columns: 1fr auto; padding: 14px 0; }
+      .tb-c { display: none; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-num { font-size: 64px; }
+      .status-word { font-size: 48px; }
+      .sensor-row {
+        grid-template-columns: 12px 1fr 80px;
+        grid-template-areas:
+          "led name count"
+          ". stats stats";
+        gap: 10px 14px;
+        padding: 16px 18px;
       }
-      .hm-row-label { font-size: 10px; padding-right: 6px; }
+      .sr-id { display: none; }
+      .sr-led { grid-area: led; }
+      .sr-id-info { grid-area: name; }
+      .sr-stats { grid-area: stats; }
+      .sr-count { grid-area: count; }
+      .sr-count .num { font-size: 22px; }
+      .hm-grid { grid-template-columns: 56px repeat(24, 1fr); gap: 2px; }
+      .hm-cell { height: 22px; }
+      .hm-row-label { font-size: 11px; padding-right: 8px; }
       .hm-col-label { font-size: 7px; }
-      .hm-cell { height: 18px; }
+      .timeline-cell, .heatmap-cell, .events-cell, .garage-hero { padding-left: 18px; padding-right: 18px; }
     }
 
-    /* ── Settings modal ── */
+    /* ═══ Settings modal ════════════════════════════════════════ */
     .modal-overlay {
       display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      background: rgba(5, 4, 3, 0.7);
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(3, 2, 3, 0.72);
       backdrop-filter: blur(6px);
       align-items: center;
       justify-content: center;
@@ -730,100 +974,106 @@
     .modal-overlay.open { display: flex; }
     .modal {
       background: var(--surface);
-      border: 1px solid var(--border3);
-      border-radius: 4px;
+      border: 1px solid var(--line3);
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.5),
-                  0 0 1px rgba(232, 166, 104, 0.4);
+      box-shadow: 0 28px 70px rgba(0,0,0,0.6),
+                  0 0 0 1px rgba(240, 173, 110, 0.18);
+      position: relative;
+    }
+    .modal::before,
+    .modal::after {
+      content: "";
+      position: absolute;
+      width: 8px; height: 8px;
+      border-color: var(--copper-bright);
+      pointer-events: none;
+    }
+    .modal::before {
+      top: -1px; left: -1px;
+      border-top: 1px solid var(--copper-bright);
+      border-left: 1px solid var(--copper-bright);
+    }
+    .modal::after {
+      bottom: -1px; right: -1px;
+      border-bottom: 1px solid var(--copper-bright);
+      border-right: 1px solid var(--copper-bright);
     }
     .modal-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
       font-family: var(--mono);
       font-size: 11px;
       font-weight: 500;
       text-transform: uppercase;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.18em;
       color: var(--copper-bright);
-      background: linear-gradient(180deg, var(--surface2), var(--surface));
     }
     .modal-close {
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-size: 22px;
-      line-height: 1;
-      cursor: pointer;
-      padding: 0 4px;
+      background: transparent; border: none;
+      color: var(--muted); font-size: 22px; line-height: 1;
+      cursor: pointer; padding: 0 4px;
       transition: color 0.15s;
     }
     .modal-close:hover { color: var(--copper-bright); }
-    .modal-body { padding: 18px 20px; }
+    .modal-body { padding: 20px 22px; }
     .set-section { margin-bottom: 20px; }
     .set-label {
       font-family: var(--mono);
       font-size: 9px;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.16em;
-      margin-bottom: 12px;
+      letter-spacing: 0.18em;
+      margin-bottom: 14px;
     }
     .set-sensor-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       gap: 10px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
       flex-wrap: wrap;
     }
     .set-sensor-row:last-child { border-bottom: none; }
     .set-sensor-left { display: flex; align-items: center; gap: 10px; }
     .set-sensor-left input {
       accent-color: var(--copper);
-      width: 16px;
-      height: 16px;
+      width: 16px; height: 16px;
       cursor: pointer;
     }
     .set-sensor-window {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      display: flex; align-items: center; gap: 6px;
       font-family: var(--mono);
       font-size: 10px;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.10em;
     }
     .set-dot {
-      width: 8px;
-      height: 8px;
+      width: 8px; height: 8px;
       border-radius: 50%;
       flex-shrink: 0;
       box-shadow: 0 0 6px currentColor;
     }
     .set-room {
-      font-size: 9px;
       font-family: var(--mono);
+      font-size: 9px;
       color: var(--muted);
-      letter-spacing: 0.14em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       padding: 2px 6px;
-      border: 1px solid var(--border);
-      border-radius: 2px;
+      border: 1px solid var(--line);
     }
     .set-sensor-window select {
       background: var(--surface2);
       color: var(--text);
-      border: 1px solid var(--border2);
+      border: 1px solid var(--line2);
       border-radius: 2px;
-      padding: 4px 6px;
+      padding: 4px 7px;
       font-family: var(--mono);
       font-size: 11px;
       outline: none;
@@ -831,131 +1081,179 @@
     .set-hint {
       font-size: 11px;
       color: var(--muted);
-      margin-top: 12px;
-      line-height: 1.5;
-      padding: 10px 12px;
-      background: var(--bg);
+      margin-top: 14px;
+      line-height: 1.55;
+      padding: 12px 14px;
+      background: var(--bg-deep);
       border-left: 2px solid var(--copper);
-      border-radius: 2px;
     }
     .set-status {
       font-family: var(--mono);
       font-size: 11px;
       min-height: 18px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       text-transform: uppercase;
-      letter-spacing: 0.10em;
+      letter-spacing: 0.12em;
     }
-    .set-status.ok  { color: var(--ok); }
+    .set-status.ok { color: var(--ok); }
     .set-status.err { color: var(--alert); }
     .set-save {
       width: 100%;
-      padding: 11px;
-      border-radius: 2px;
+      padding: 12px;
       cursor: pointer;
       background: var(--copper-dim);
       color: var(--copper-bright);
-      border: 1px solid var(--border3);
+      border: 1px solid var(--line3);
       font-family: var(--mono);
       font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.20em;
       font-weight: 500;
       transition: all 0.15s;
     }
     .set-save:hover {
       background: rgba(200, 122, 58, 0.22);
-      box-shadow: 0 0 16px rgba(232, 166, 104, 0.15);
+      box-shadow: 0 0 18px rgba(240, 173, 110, 0.18);
     }
-
-    /* Door state in metric value */
-    .door-state-open  { color: var(--alert) !important; }
-    .door-state-closed { color: var(--ok) !important; }
   </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <span class="logo">HUE<span class="slash">/</span>MOTION</span>
-    <div class="conn-badge" id="conn-badge">
-      <span class="conn-dot"></span>
-      <span id="conn-label">Verbinde…</span>
-    </div>
-  </div>
-  <div class="topbar-right">
-    <button class="icon-btn" id="settings-btn" onclick="openSettings()" aria-label="Push-Benachrichtigungen" title="Push-Benachrichtigungen">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-      </svg>
-    </button>
-    <span id="clock"></span>
-  </div>
-</div>
+<div class="shell">
 
-<div class="main">
-
-  <div class="section-label">Übersicht</div>
-  <div class="metrics">
-    <div class="metric">
-      <div class="metric-label">Ereignisse heute</div>
-      <div class="metric-value" id="m-today">–</div>
+  <div class="topbar">
+    <div class="tb-l">
+      <span class="logo">HUE<span class="slash">/</span>MOTION</span>
+      <div class="conn-badge" id="conn-badge">
+        <span class="conn-dot"></span>
+        <span id="conn-label">Verbinde…</span>
+      </div>
     </div>
-    <div class="metric">
-      <div class="metric-label">Aktivster Bereich</div>
-      <div class="metric-value sm" id="m-top">–</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Letzte Bewegung</div>
-      <div class="metric-value sm" id="m-last">–</div>
-      <div class="metric-sub" id="m-last-room"></div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Garage</div>
-      <div class="metric-value sm" id="m-garage">–</div>
-      <div class="metric-sub" id="m-garage-sub"></div>
+    <div class="tb-c">SYS · BEWEGUNGSMATRIX</div>
+    <div class="tb-r">
+      <span id="clock"></span>
+      <button class="icon-btn" id="settings-btn" onclick="openSettings()" aria-label="Push-Benachrichtigungen" title="Push-Benachrichtigungen">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
     </div>
   </div>
 
-  <div class="section-label">Sensoren</div>
-  <div class="sensors-grid" id="sensors-grid"></div>
+  <!-- ═══ HERO ═══════════════════════════════════════════════ -->
+  <div class="hero">
+    <div class="cell hero-cell status-block">
+      <span class="cell-coord">A.01</span>
+      <span class="cell-title">STATUS</span>
+      <div class="status-line">
+        <span class="status-led" id="overall-led"></span>
+        <span class="status-word" id="overall-word">RUHE</span>
+      </div>
+      <div class="status-meta">
+        <span><b id="active-count">0</b>/4 Sensoren aktiv</span>
+        <span>Letzte Bewegung <b id="m-last">–</b></span>
+        <span id="m-last-room"></span>
+      </div>
+    </div>
 
-  <div class="section-label">Aktivitäts-Heatmap</div>
-  <div class="panel" style="margin-bottom:18px;">
-    <div class="panel-header">
-      <span class="panel-title">Bewegung &times; Stunde</span>
-      <div class="panel-tabs">
+    <div class="cell hero-cell">
+      <span class="cell-coord">A.02</span>
+      <span class="cell-title">EREIGNISSE · 24H</span>
+      <div class="hero-label">Heute</div>
+      <div class="hero-num">
+        <span class="accent" id="m-today">–</span>
+        <span class="small-unit">EVT</span>
+      </div>
+      <div class="hero-sub">
+        <span class="delta">↑</span>
+        <span>Aktivster Bereich · <b id="m-top" style="color:var(--text);font-weight:500">–</b></span>
+      </div>
+    </div>
+
+    <div class="cell hero-cell">
+      <span class="cell-coord">A.03</span>
+      <span class="cell-title">GARAGE</span>
+      <div class="hero-label">Türzustand</div>
+      <div class="garage-state" style="margin-bottom:8px">
+        <span class="indicator unknown" id="garage-indicator"></span>
+        <span class="word unknown" id="m-garage">–</span>
+      </div>
+      <div class="garage-meta">Zuletzt · <b id="m-garage-sub">—</b></div>
+    </div>
+
+    <!-- 24h timeline band -->
+    <div class="cell timeline-cell">
+      <span class="cell-coord">A.04</span>
+      <span class="cell-title">24-STUNDEN-ACHSE · LIVE</span>
+      <div class="timeline-wrap">
+        <div class="tl-track"></div>
+        <div class="tl-rows" id="tl-rows"></div>
+        <div class="tl-now" id="tl-now"></div>
+        <div id="tl-events" style="position:absolute;inset:8px 0 8px 0;"></div>
+      </div>
+      <div class="tl-axis" id="tl-axis"></div>
+    </div>
+  </div>
+
+  <!-- ═══ SENSORS ═══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="cell sensor-rail-cell">
+      <span class="cell-coord">B.01</span>
+      <span class="cell-title">SENSORARRAY · 4 ZONEN</span>
+      <div class="sensor-rail" id="sensors-grid"></div>
+    </div>
+  </div>
+
+  <!-- ═══ HEATMAP ═══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="cell heatmap-cell">
+      <span class="cell-coord">C.01</span>
+      <span class="cell-title">HEATMAP</span>
+      <div class="hm-tabs">
         <button class="tab-btn active" onclick="setHeatRange(this,1)">Heute</button>
         <button class="tab-btn" onclick="setHeatRange(this,7)">7 Tage</button>
       </div>
-    </div>
-    <div class="heatmap-body">
       <div class="hm-grid" id="heatmap"></div>
       <div class="hm-legend">
         <span>weniger</span>
         <div class="hm-legend-cells" id="hm-legend-cells"></div>
         <span>mehr</span>
+        <div class="hm-stats" id="hm-stats"></div>
       </div>
     </div>
   </div>
 
-  <div class="section-label">Protokoll</div>
-  <div class="panels">
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">Garage</span>
-        <span id="door-count" style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:0.12em"></span>
+  <!-- ═══ PROTOCOL ═══════════════════════════════════════════════ -->
+  <div class="section protocol">
+
+    <div class="cell panel" style="padding:0">
+      <div class="garage-hero">
+        <span class="cell-coord">D.01</span>
+        <span class="cell-title">GARAGE · LOG</span>
+        <div style="margin-top:4px"></div>
+        <div class="hero-label">Aktueller Zustand</div>
+        <div class="garage-state">
+          <span class="indicator unknown" id="garage-indicator-2"></span>
+          <span class="word unknown" id="m-garage-2">–</span>
+        </div>
+        <div class="garage-meta">Zuletzt geändert · <b id="m-garage-sub-2">—</b></div>
       </div>
       <div class="filter-bar" id="door-filter-bar"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 22px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+        <span class="events-head-l">Protokoll</span>
+        <span id="door-count"></span>
+      </div>
       <div class="events-list" id="door-events-list"></div>
     </div>
 
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">Ereignisse</span>
-        <div style="display:flex;align-items:center;gap:10px">
-          <span id="event-count" style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:0.12em"></span>
+    <div class="cell events-cell">
+      <div class="events-head" style="position:relative">
+        <span class="cell-coord">E.01</span>
+        <span class="cell-title">EREIGNISSE</span>
+        <span class="events-head-l" style="margin-top:6px">Live-Stream</span>
+        <div class="events-head-r">
+          <span id="event-count"></span>
           <button class="tab-btn" id="event-filter-btn" onclick="toggleEventFilter()">Filter</button>
         </div>
       </div>
@@ -978,9 +1276,11 @@
       </div>
       <div class="events-list" id="events-list"></div>
     </div>
+
   </div>
 </div>
 
+<!-- Settings modal -->
 <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
   <div class="modal">
     <div class="modal-head">
@@ -1005,14 +1305,13 @@ const SUPABASE_URL  = 'https://ebbuvdzgstrhrcsbrlez.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViYnV2ZHpnc3RyaHJjc2JybGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMjc4ODAsImV4cCI6MjA5MTYwMzg4MH0.RyTzHiqV1TPSZtM7lgenBJbUCTjj5fCUhoWauifjlIE';
 
 const SENSORS = {
-  83:  { name: 'Galerie',  room: 'OG', hex: '#E8A668' },  /* bright copper */
-  57:  { name: 'Haustür',  room: 'EG', hex: '#D9B074' },  /* warm brass    */
-  143: { name: 'Keller',   room: 'UG', hex: '#B26A2A' },  /* deep amber    */
-  95:  { name: 'Vorhaus',  room: 'EG', hex: '#C45A2C' },  /* rust copper   */
+  83:  { name: 'Galerie',  room: 'OG', hex: '#F0AD6E' },
+  57:  { name: 'Haustür',  room: 'EG', hex: '#E0C088' },
+  143: { name: 'Keller',   room: 'UG', hex: '#B5731F' },
+  95:  { name: 'Vorhaus',  room: 'EG', hex: '#D85F2E' },
 };
 
-/* Copper heatmap ramp: charcoal → ember → bright copper */
-const HM_STOPS = ['#1c1810', '#3a2515', '#7a3f15', '#B26A2A', '#E8A668'];
+const HM_STOPS = ['#181519', '#3a2515', '#7a3f15', '#B5731F', '#F0AD6E'];
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -1022,40 +1321,93 @@ const lastState = {};
 
 // ── Uhr ──────────────────────────────────────────────────────────────────────
 function updateClock() {
+  const d = new Date();
   document.getElementById('clock').textContent =
-    new Date().toLocaleString('de-AT', { weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    d.toLocaleString('de-AT', { weekday:'short', day:'2-digit', month:'2-digit' }) +
+    ' · ' +
+    d.toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  updateTimelineNow();
 }
 setInterval(updateClock, 1000);
-updateClock();
 
-// ── Sensor-Cards aufbauen ────────────────────────────────────────────────────
+// ── Timeline ─────────────────────────────────────────────────────────────────
+function buildTimeline() {
+  // Axis labels at 0h, 6h, 12h, 18h, 24h
+  document.getElementById('tl-axis').innerHTML =
+    [0, 3, 6, 9, 12, 15, 18, 21, 24].map(h =>
+      `<span>${String(h).padStart(2,'0')}:00</span>`
+    ).join('');
+
+  // Rows with labels
+  document.getElementById('tl-rows').innerHTML =
+    Object.values(SENSORS).map(s =>
+      `<div class="tl-row"><span class="tl-rowlabel">${s.name.slice(0,3).toUpperCase()}</span></div>`
+    ).join('');
+}
+
+function updateTimelineNow() {
+  const now = new Date();
+  const pct = ((now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()) / 86400) * 100;
+  const el = document.getElementById('tl-now');
+  if (el) el.style.left = pct + '%';
+}
+
+function renderTimelineEvents() {
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const todayMs = todayStart.getTime();
+  const todayEvts = events.filter(e => new Date(e.created_at) >= todayStart);
+
+  const sensorIds = Object.keys(SENSORS);
+
+  const html = todayEvts.map(e => {
+    const t = new Date(e.created_at);
+    const pct = ((t.getTime() - todayMs) / 86400000) * 100;
+    if (pct < 0 || pct > 100) return '';
+    const rowIdx = sensorIds.indexOf(String(e.sensor_id));
+    if (rowIdx < 0) return '';
+    const rowPct = (rowIdx + 0.5) * (100 / sensorIds.length);
+    const s = SENSORS[e.sensor_id];
+    return `<span class="tl-event" style="left:${pct}%;top:${rowPct}%;background:${s.hex};color:${s.hex}"></span>`;
+  }).join('');
+
+  document.getElementById('tl-events').innerHTML = html;
+}
+
+// ── Sensor rail ──────────────────────────────────────────────────────────────
 function buildSensorCards() {
   document.getElementById('sensors-grid').innerHTML =
-    Object.entries(SENSORS).map(([id, s]) => `
-      <div class="sensor-card" id="sc-${id}">
-        <div class="sc-top">
-          <div>
-            <div class="sc-name">${s.name}</div>
-            <div class="sc-meta">${s.room} · ID ${id}</div>
+    Object.entries(SENSORS).map(([id, s], i) => `
+      <div class="sensor-row" id="sc-${id}">
+        <div class="sr-id"><span class="hash">#</span>${id} <span style="opacity:0.4">/ ${String(i+1).padStart(2,'0')}</span></div>
+        <div class="sr-led"></div>
+        <div class="sr-id-info">
+          <div class="sr-name">${s.name}</div>
+          <div class="sr-meta">
+            <span class="pill">${s.room}</span>
+            <span id="pill-${id}">RUHIG</span>
           </div>
-          <span class="sc-pill idle" id="pill-${id}">ruhig</span>
         </div>
-        <div class="sc-last" id="last-${id}"></div>
-        <div class="sc-count" id="count-${id}"><span>0</span>heute</div>
-        <div class="sparkbar" id="spark-${id}">
-          ${Array(24).fill(`<div class="spark-seg" style="background:var(--surface2);height:2px"></div>`).join('')}
+        <div class="sr-stats">
+          <div class="sr-last" id="last-${id}">—</div>
+          <div class="sr-spark" id="spark-${id}">
+            ${Array(24).fill(`<div class="spark-seg"></div>`).join('')}
+          </div>
+        </div>
+        <div class="sr-count" id="count-${id}">
+          <span class="num">0</span>
+          <span class="lbl">heute</span>
         </div>
       </div>
     `).join('');
 }
 
-// ── Heatmap-Legende ──────────────────────────────────────────────────────────
+// ── Heatmap legend ───────────────────────────────────────────────────────────
 function buildHmLegend() {
   document.getElementById('hm-legend-cells').innerHTML =
     HM_STOPS.map(c => `<div class="hm-cell" style="background:${c}"></div>`).join('');
 }
 
-// ── Ereignisse Filter ────────────────────────────────────────────────────────
+// ── Event filter ─────────────────────────────────────────────────────────────
 function buildEventFilter() {
   const sel = document.getElementById('ef-sensor');
   if (!sel) return;
@@ -1077,7 +1429,7 @@ function resetEventFilter() {
   renderEvents();
 }
 
-// ── Sensor-Cards aktualisieren ───────────────────────────────────────────────
+// ── Sensor cards update ──────────────────────────────────────────────────────
 function updateSensorCards() {
   const now = Date.now();
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
@@ -1090,27 +1442,28 @@ function updateSensorCards() {
 
     const isActive = lastState[sid] === true;
 
-    const card = document.getElementById(`sc-${id}`);
+    const row  = document.getElementById(`sc-${id}`);
     const pill = document.getElementById(`pill-${id}`);
     const last = document.getElementById(`last-${id}`);
     const cnt  = document.getElementById(`count-${id}`);
-    if (!card) return;
+    if (!row) return;
 
-    card.classList.toggle('motion', isActive);
-    pill.className = `sc-pill ${isActive ? 'active' : 'idle'}`;
-    pill.textContent = isActive ? 'aktiv' : 'ruhig';
+    row.classList.toggle('motion', isActive);
+    pill.textContent = isActive ? 'AKTIV' : 'RUHIG';
+    pill.style.color = isActive ? 'var(--copper-bright)' : 'var(--muted)';
+    pill.style.letterSpacing = '0.18em';
+    pill.style.fontWeight = isActive ? '600' : '400';
 
     if (latest) {
       const ago = Math.round((now - new Date(latest.created_at)) / 60000);
       const t = new Date(latest.created_at).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' });
-      last.textContent = `Zuletzt ${t} · vor ${ago < 1 ? '<1' : ago} min`;
+      last.textContent = `LETZTE BEWEGUNG · ${t} · VOR ${ago < 1 ? '<1' : ago} MIN`;
     } else {
-      last.textContent = 'Keine Daten';
+      last.textContent = 'KEINE DATEN';
     }
 
-    cnt.innerHTML = `<span>${todayEvts.length}</span>heute`;
+    cnt.innerHTML = `<span class="num">${todayEvts.length}</span><span class="lbl">heute</span>`;
 
-    // Sparkline
     const spark = document.getElementById(`spark-${id}`);
     const segs  = spark.querySelectorAll('.spark-seg');
     const curHour = new Date(); curHour.setMinutes(0,0,0);
@@ -1127,7 +1480,7 @@ function updateSensorCards() {
       if (count > 0) {
         seg.style.background = s.hex;
         seg.style.opacity    = '1';
-        seg.style.height     = `${2 + Math.round((count / maxCount) * 26)}px`;
+        seg.style.height     = `${3 + Math.round((count / maxCount) * 28)}px`;
         seg.style.boxShadow  = `0 0 6px ${s.hex}55`;
       } else {
         seg.style.background = 'var(--surface2)';
@@ -1141,7 +1494,7 @@ function updateSensorCards() {
   });
 }
 
-// ── Metriken ─────────────────────────────────────────────────────────────────
+// ── Metriken + Status ────────────────────────────────────────────────────────
 function updateMetrics() {
   const now = Date.now();
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
@@ -1152,7 +1505,8 @@ function updateMetrics() {
   const counts = {};
   todayEvts.forEach(e => { counts[e.sensor_id] = (counts[e.sensor_id] || 0) + 1; });
   const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
-  document.getElementById('m-top').textContent = top ? SENSORS[top[0]]?.name || '–' : '–';
+  document.getElementById('m-top').textContent =
+    top ? `${SENSORS[top[0]]?.name || '–'} · ${top[1]}×` : '–';
 
   const latest = events[0];
   if (latest) {
@@ -1160,9 +1514,33 @@ function updateMetrics() {
     document.getElementById('m-last').textContent = ago < 1 ? 'jetzt' : `vor ${ago} min`;
     document.getElementById('m-last-room').textContent = SENSORS[latest.sensor_id]?.name || latest.sensor_id;
   }
+
+  // Overall status
+  const activeCount = Object.values(lastState).filter(v => v === true).length;
+  const led  = document.getElementById('overall-led');
+  const word = document.getElementById('overall-word');
+  document.getElementById('active-count').textContent = activeCount;
+  if (activeCount > 0) {
+    led.classList.add('alert');
+    word.classList.add('alert');
+    word.textContent = 'BEWEGUNG';
+  } else {
+    led.classList.remove('alert');
+    word.classList.remove('alert');
+    word.textContent = 'RUHE';
+  }
+
+  // Heatmap stats
+  const total = events.filter(e => new Date(e.created_at) >= new Date(Date.now() - heatDays * 86400000)).length;
+  const hmStats = document.getElementById('hm-stats');
+  if (hmStats) {
+    hmStats.innerHTML =
+      `<span>Σ <b>${total}</b></span>` +
+      `<span>Ø <b>${(total / 24 / heatDays).toFixed(1)}</b>/h</span>`;
+  }
 }
 
-// ── Events rendern ────────────────────────────────────────────────────────────
+// ── Events render ────────────────────────────────────────────────────────────
 function renderEvents(newId = null) {
   const sensor  = document.getElementById('ef-sensor')?.value || 'all';
   const fromVal = document.getElementById('ef-from')?.value;
@@ -1217,16 +1595,17 @@ function renderHeatmap() {
   });
 
   document.getElementById('heatmap').innerHTML = html;
+  updateMetrics();
 }
 
 function setHeatRange(btn, days) {
-  document.querySelectorAll('.panel-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.hm-tabs .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   heatDays = days;
   renderHeatmap();
 }
 
-// ── Initialdaten laden ────────────────────────────────────────────────────────
+// ── Initial load ─────────────────────────────────────────────────────────────
 async function loadInitial() {
   const since = new Date(Date.now() - 7 * 86400000).toISOString();
 
@@ -1261,6 +1640,7 @@ async function loadInitial() {
   updateSensorCards();
   renderEvents();
   renderHeatmap();
+  renderTimelineEvents();
 }
 
 // ── Realtime ──────────────────────────────────────────────────────────────────
@@ -1295,6 +1675,7 @@ function handleRealtimeInsert(payload) {
   updateSensorCards();
   renderEvents(e.id);
   renderHeatmap();
+  renderTimelineEvents();
 }
 
 function setupRealtime() {
@@ -1394,23 +1775,30 @@ function handleDoorInsert(payload) {
 }
 
 function renderDoorPanel() {
-  const val = document.getElementById('m-garage');
-  const sub = document.getElementById('m-garage-sub');
-  if (!val) return;
-
   const g = doorStatus['Garage'];
-  if (!g) {
-    val.textContent = '–';
-    val.className = 'metric-value sm';
-    sub.textContent = '';
-    return;
-  }
 
-  val.textContent = g.state === 'open' ? 'open' : 'closed';
-  val.className = 'metric-value sm ' + (g.state === 'open' ? 'door-state-open' : 'door-state-closed');
-  const time = new Date(g.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
-  const d = new Date(g.created_at).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' });
-  sub.textContent = `${d} ${time}`;
+  // Two paired displays (hero + dedicated panel)
+  const pairs = [
+    { word: document.getElementById('m-garage'),    indicator: document.getElementById('garage-indicator'),   sub: document.getElementById('m-garage-sub') },
+    { word: document.getElementById('m-garage-2'),  indicator: document.getElementById('garage-indicator-2'), sub: document.getElementById('m-garage-sub-2') },
+  ];
+
+  pairs.forEach(({ word, indicator, sub }) => {
+    if (!word) return;
+    if (!g) {
+      word.textContent = '–';
+      word.className = 'word unknown';
+      indicator.className = 'indicator unknown';
+      sub.textContent = '—';
+      return;
+    }
+    word.textContent = g.state;
+    word.className = 'word ' + (g.state === 'open' ? 'open' : 'closed');
+    indicator.className = 'indicator ' + (g.state === 'open' ? 'open' : 'closed');
+    const time = new Date(g.created_at).toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' });
+    const d = new Date(g.created_at).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' });
+    sub.textContent = `${d} ${time}`;
+  });
 }
 
 function renderDoorEventsList() {
@@ -1516,7 +1904,7 @@ async function saveSettings() {
 
   const status = document.getElementById('set-status');
   status.className = 'set-status';
-  status.textContent = 'Speichere…';
+  status.textContent = 'SPEICHERE…';
 
   const { error } = await sb.from('notify_settings')
     .update({ sensor_config, updated_at: new Date().toISOString() })
@@ -1524,16 +1912,16 @@ async function saveSettings() {
 
   if (error) {
     status.classList.add('err');
-    status.textContent = 'Fehler: ' + error.message;
+    status.textContent = 'FEHLER: ' + error.message;
   } else {
     notifySettings = { sensor_config };
     updateArmedBadge();
     status.classList.add('ok');
-    status.textContent = 'Gespeichert.';
+    status.textContent = 'GESPEICHERT';
   }
 }
 
-// ── iOS Zoom unterbinden ─────────────────────────────────────────────────────
+// ── iOS zoom prevention ──────────────────────────────────────────────────────
 ['gesturestart', 'gesturechange', 'gestureend'].forEach(evt =>
   document.addEventListener(evt, e => e.preventDefault())
 );
@@ -1542,6 +1930,8 @@ document.addEventListener('touchmove', e => {
 }, { passive: false });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
+updateClock();
+buildTimeline();
 buildSensorCards();
 buildHmLegend();
 buildEventFilter();
