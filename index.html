@@ -164,6 +164,21 @@
       margin-left: 6px;
     }
     .logo .slash { color: var(--muted2); font-weight: 400; }
+    .app-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 24px;
+      border-top: 1px solid var(--surface3);
+      background: var(--bg);
+    }
+    .app-footer-copy {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted2);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
     .sw-ver {
       font-family: var(--mono);
       font-size: 9px;
@@ -1349,7 +1364,6 @@
     <div class="tb-c">SYS · MOTION MATRIX</div>
     <div class="tb-r">
       <span id="clock"></span>
-      <span id="sw-ver" class="sw-ver" title="Service Worker Cache Version">SW …</span>
       <button class="icon-btn" onclick="clearCacheAndReload()" aria-label="Cache leeren" title="Cache leeren &amp; neu laden">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="23 4 23 10 17 10"/>
@@ -2298,5 +2312,10 @@ if ('serviceWorker' in navigator) {
   loadInitial().then(() => { setupRealtime(); setupConnectionWatchdog(); });
 })();
 </script>
+
+  <footer class="app-footer">
+    <span class="app-footer-copy">Hue Motion Dashboard &mdash; by Chris Zane</span>
+    <span id="sw-ver" class="sw-ver" title="Service Worker Cache Version">SW …</span>
+  </footer>
 </body>
 </html>
