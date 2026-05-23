@@ -1578,7 +1578,17 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let currentUser = null;
 let events = [];
 let heatDays = 1;
-const lastState = {};
+const lastState    = {};
+const motionTimers = {};
+
+function armMotionTimer(sensorId, delayMs = 10000) {
+  clearTimeout(motionTimers[sensorId]);
+  motionTimers[sensorId] = setTimeout(() => {
+    lastState[sensorId] = false;
+    updateSensorCards();
+    updateMetrics();
+  }, delayMs);
+}
 
 // ── Uhr ──────────────────────────────────────────────────────────────────────
 function updateClock() {
@@ -1894,9 +1904,16 @@ async function loadInitial() {
 
   if (allLast) {
     const seen = new Set();
+    const now  = Date.now();
     allLast.forEach(e => {
       if (!seen.has(e.sensor_id)) {
-        lastState[e.sensor_id] = e.presence;
+        const age = now - new Date(e.created_at).getTime();
+        if (e.presence && age < 10000) {
+          lastState[e.sensor_id] = true;
+          armMotionTimer(e.sensor_id, 10000 - age);
+        } else {
+          lastState[e.sensor_id] = false;
+        }
         seen.add(e.sensor_id);
       }
     });
@@ -1931,6 +1948,7 @@ function setConnState(state) {
 function handleRealtimeInsert(payload) {
   const e = payload.new;
   lastState[e.sensor_id] = e.presence;
+  if (e.presence) armMotionTimer(e.sensor_id);
 
   if (e.presence && !events.some(x => x.id === e.id)) {
     events.unshift(e);
