@@ -165,12 +165,16 @@
     }
     .logo .slash { color: var(--muted2); font-weight: 400; }
     .app-footer {
+      border-top: 1px solid var(--surface3);
+      background: var(--bg);
+    }
+    .app-footer-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 6px 32px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 24px;
-      border-top: 1px solid var(--surface3);
-      background: var(--bg);
     }
     .app-footer-copy {
       font-family: var(--mono);
@@ -2314,8 +2318,10 @@ if ('serviceWorker' in navigator) {
 </script>
 
   <footer class="app-footer">
-    <span class="app-footer-copy">Hue Motion Dashboard &mdash; by Chris Zane</span>
-    <span id="sw-ver" class="sw-ver" title="Service Worker Cache Version">SW …</span>
+    <div class="app-footer-inner">
+      <span class="app-footer-copy">Hue Motion Dashboard &mdash; by Chris Zane</span>
+      <span id="sw-ver" class="sw-ver" title="Service Worker Cache Version">SW …</span>
+    </div>
   </footer>
 </body>
 </html>
