@@ -164,6 +164,23 @@
       margin-left: 6px;
     }
     .logo .slash { color: var(--muted2); font-weight: 400; }
+    .sw-ver {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted2);
+      letter-spacing: 0.12em;
+      background: var(--surface2);
+      border: 1px solid var(--surface3);
+      border-radius: 3px;
+      padding: 2px 7px;
+      white-space: nowrap;
+      cursor: default;
+    }
+    @keyframes sw-flash {
+      0%   { color: var(--copper-bright); border-color: var(--copper); box-shadow: 0 0 10px rgba(200,122,58,0.4); }
+      100% { color: var(--muted2); border-color: var(--surface3); box-shadow: none; }
+    }
+    .sw-ver.sw-updated { animation: sw-flash 3s ease-out forwards; }
     .conn-badge {
       display: inline-flex;
       align-items: center;
@@ -1332,6 +1349,7 @@
     <div class="tb-c">SYS · MOTION MATRIX</div>
     <div class="tb-r">
       <span id="clock"></span>
+      <span id="sw-ver" class="sw-ver" title="Service Worker Cache Version">SW …</span>
       <button class="icon-btn" onclick="clearCacheAndReload()" aria-label="Cache leeren" title="Cache leeren &amp; neu laden">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="23 4 23 10 17 10"/>
@@ -2242,10 +2260,25 @@ document.addEventListener('touchmove', e => {
 }, { passive: false });
 
 // ── Service Worker ───────────────────────────────────────────────────────────
+async function refreshSwVer() {
+  try {
+    const keys = await caches.keys();
+    const name = keys.find(k => k.startsWith('motion-v'));
+    const el = document.getElementById('sw-ver');
+    if (el && name) el.textContent = name.replace('motion-', '');
+  } catch {}
+}
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () =>
-    navigator.serviceWorker.register('sw.js').catch(() => {})
-  );
+  window.addEventListener('load', async () => {
+    await navigator.serviceWorker.register('sw.js').catch(() => {});
+    await refreshSwVer();
+    navigator.serviceWorker.addEventListener('controllerchange', async () => {
+      await refreshSwVer();
+      const el = document.getElementById('sw-ver');
+      if (el) { el.classList.remove('sw-updated'); void el.offsetWidth; el.classList.add('sw-updated'); }
+    });
+  });
 }
 
 // ── Start ─────────────────────────────────────────────────────────────────────
